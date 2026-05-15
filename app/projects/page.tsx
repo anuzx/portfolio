@@ -26,7 +26,7 @@ export default function Home() {
       </h1>
 
       <p className="tracking-tight font-custom2 text-neutral-600 dark:text-neutral-400 max-w-lg text-sm md:text-base mt-4">
-        Hi there! I love building stuff for people and am passionate about contributing to open source. Here are my projects and open source contributions—feel free to take a look.
+        Hi there! I love building software for people. Here is a collection of projects focused on backend systems, full-stack engineering, and production-grade applications.
       </p>
 
       <div className="hidden md:block absolute right-6 w-212 h-px bg-(--pattern-fg) my-3 opacity-90 dark:opacity-15"></div>

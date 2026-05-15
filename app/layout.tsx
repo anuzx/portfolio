@@ -11,15 +11,15 @@ import { Toaster } from "sonner";
 
 const instrumentSerif = Instrument_Serif({
   weight: ["400"],
-  subsets: ["latin"], // 🛠 Fix missing subsets
+  subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
   title: "anuzx",
-  description: "Engineer / Artist — I love building and breaking stuff",
+  description: "Focused on building robust backends & resilient systems",
   openGraph: {
     title: "anuzx",
-    description: "Engineer / Artist — I love building and breaking stuff",
+    description: "Focused on building robust backends & resilient systems",
     url: "", // Update to your actual URL if different
     siteName: "anuzx",
     type: "website",
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   twitter: {
     card: "summary_large_image",
     title: "0xzdev",
-    description: "Engineer / Artist — I love building and breaking stuff",
+    description: "Focused on building robust backends & resilient systems",
   },
 };
 

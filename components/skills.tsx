@@ -56,7 +56,7 @@ export default function Skills() {
 
       <div className="flex flex-col items-start space-y-3">
         <p className="font-custom2 text-neutral-700 dark:text-neutral-300 mt-3 px-2 py-[7px] text-sm inline-block bg-neutral-100 dark:bg-neutral-900 border-dashed border-neutral-300 dark:border-neutral-700 border mb-6">
-          I love working with these technologies to build beautiful and functional applications.
+          I love working with these technologies to build robust and functional applications.
         </p>
 
         <div className="flex flex-wrap items-center gap-2">

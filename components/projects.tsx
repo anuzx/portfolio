@@ -40,6 +40,7 @@ import {
   SiApachekafka,
   SiElasticsearch,
   SiDrizzle,
+  SiSvelte
 } from "react-icons/si";
 type TechIcon = ComponentType<{ className?: string }>;
 
@@ -75,7 +76,8 @@ type TechKey =
   | "postgres"
   | "kafka"
   | "elasticsearch"
-  | "drizzle";
+  | "drizzle"
+  | "svelte";
 
 type TechItem =
   | TechKey
@@ -130,6 +132,7 @@ const iconMap: Record<TechKey, TechIcon> = {
   kafka: SiApachekafka,
   elasticsearch: SiElasticsearch,
   drizzle: SiDrizzle,
+  svelte: SiSvelte,
 };
 
 const techNames: Record<TechKey, string> = {
@@ -165,6 +168,7 @@ const techNames: Record<TechKey, string> = {
   kafka: "Apache Kafka",
   elasticsearch: "Elasticsearch",
   drizzle: "Drizzle ORM",
+  svelte: "svelte"
 };
 
 
@@ -413,11 +417,12 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
+
   const projects: Project[] = [
     {
       title: "Mind Journal",
-      src: "",
-      lightModeSrc: "",
+      src: "/coming_soon.jpg",
+      lightModeSrc: "/coming_soon.jpg",
       video: "",
       description: "store all your important stuff here and find them using AI search feature",
       tech: ["react", "ts", "tailwind", "mongodb", "redis", "elasticsearch"],
@@ -427,8 +432,8 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
     },
     {
       title: "Streamix",
-      src: "/Screenshot%202026-02-07%20234301.png",
-      lightModeSrc: "/Screenshot%202026-02-07%20234011.png",
+      src: "/coming_soon.jpg",
+      lightModeSrc: "/coming_soon.jpg",
       video: "",
       description: "video uploading platform with transcoding and hls pipeline",
       tech: [
@@ -444,8 +449,8 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
     },
     {
       title: "Chess",
-      src: "/Screenshot%202026-02-07%20233440.png",
-      lightModeSrc: "/Screenshot%202026-02-07%20233831.png",
+      src: "/project-image/chess.jpg",
+      lightModeSrc: "/project-image/chess.jpg",
       video: "",
       description: "multiplayer realtime chess with chat and video calling feature",
       tech: ["next", "ts", "tailwind", "prisma", "bun", "redis"],
@@ -453,56 +458,55 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       live: "",
       backgroundImage: "/image copy 3.png",
     },
-    /*
+
     {
-      title: "Inquiro",
-      src: "/Screenshot 2026-02-07 011550.png",
-      lightModeSrc: "/Screenshot 2026-02-07 012511.png",
-      video: "/inquiro.mp4",
-      description: "Inquiro is a  AI-powered search engine that helps you find information on the internet",
+      title: "Grabpic",
+      src: "/coming_soon.jpg",
+      lightModeSrc: "/coming_soon.jpg",
+      video: "",
+      description: "ai powered photo grabbing platform",
       tech: [
         "next",
         "ts",
-        "radixui",
-        "node",
+        "bun",
         "gemini",
         "langchain",
         "langgraph",
       ],
-      github: "https://github.com/Ashutoshx7/Inquiro-",
-      live: "https://yourlive.com",
+      github: "https://github.com/anuzx/Grabpic",
+      live: "",
       backgroundImage: "/image copy 4.png",
     },
     {
-      title: "RepoLens",
-      src: "/Screenshot%202026-02-07%20225125.png",
-      lightModeSrc: "/Screenshot%202026-02-07%20225107.png",
-      video: "https://www.youtube.com/embed/nuE-KWBeauE?si=z-hrZjuMuFVfSxc5",
-      description: "An all-in-one GitHub explorer with tech stack insights, code browsing, and analytics.",
+      title: "SyncBoard",
+      src: "/coming_soon.jpg",
+      lightModeSrc: "/coming_soon.jpg",
+      video: "",
+      description: "collaborative doodling tool",
       tech: [
         "next",
+        "ts",
         "tailwind",
-        "radixui",
-        "charts",
-        "github",
-        "rag",
+        "drizzle"
       ],
-      github: "https://github.com/Ashutoshx7/RepoLens-",
-      live: "https://motion-suite-site.vercel.app/",
+      github: "https://github.com/anuzx/SyncBoard",
+      live: "",
     },
     {
-      title: "MotionSuite",
-      src: "/project-image/image copy 2.png",
-      lightModeSrc: "/project-image/image copy 3.png",
-      video: "/scribble.mp4",
-      description: "motion-suite is a lightweight animation toolkit for React + Framer Motion",
-      tech: ["ts", "next", "react", "motion"],
-      github: "https://github.com/Ashutoshx7/Motion-SUITE",
-      live: "https://motion-suite-site.vercel.app/",
+      title: "Pulse Guard",
+      src: "/project-image/pulse.jpeg",
+      lightModeSrc: "/project-image/pulse.jpeg",
+      video: "",
+      description: "Real-time log monitoring and intelligent threat detection for modern applications.",
+      tech: ["python", "fastapi", "svelte", "kafka"],
+      github: "https://github.com/anuzx/Pulse_Guard",
+      live: "",
       backgroundImage: "/image copy 2.png",
     },
-    */
+
   ];
+
+
 
   return (
     <div className="mt-8">
@@ -514,7 +518,7 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
           bg-neutral-100 dark:bg-neutral-900 border-dashed border-neutral-300 dark:border-neutral-700 border
         "
       >
-        I love designing and building thoughtful, production-grade applications.
+        I love building scalable backend systems and production-grade applications.
       </p>
 
       {/* GRID */}
