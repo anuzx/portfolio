@@ -1,23 +1,23 @@
-import React from 'react'
 import Link from 'next/link'
-import { Github, Linkedin, Twitter } from 'lucide-react'
+import { Github, Linkedin } from 'lucide-react'
+import { FaXTwitter } from 'react-icons/fa6'
 import Container from './containers'
 
 const Footer = () => {
   const socialLinks = [
     {
       name: 'GitHub',
-      url: 'https://github.com/Ashutoshx7',
+      url: 'https://github.com/anuzx',
       icon: Github
     },
     {
       name: 'Twitter',
-      url: 'https://x.com/Ashutosh_7x7',
-      icon: Twitter
+      url: 'https://x.com/0xzdev',
+      icon: FaXTwitter
     },
     {
       name: 'LinkedIn',
-      url: 'https://www.linkedin.com/in/ashutosh-singh-385a843a4/',
+      url: 'https://www.linkedin.com/in/',
       icon: Linkedin
     },
   ]

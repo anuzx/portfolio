@@ -29,7 +29,7 @@ import {
   SiRedis,
   SiCelery,
   SiTldraw,
-  SiCss3,
+  SiCss,
   SiPython,
   SiAnthropic,
   SiClaude,
@@ -40,10 +40,13 @@ import {
   SiApachekafka,
   SiElasticsearch,
   SiDrizzle,
-  SiSvelte
+  SiSvelte,
+  SiVercel,
+
+
 } from "react-icons/si";
 type TechIcon = ComponentType<{ className?: string }>;
-
+import { TbPlugConnected } from "react-icons/tb";
 type TechKey =
   | "next"
   | "ts"
@@ -77,7 +80,9 @@ type TechKey =
   | "kafka"
   | "elasticsearch"
   | "drizzle"
-  | "svelte";
+  | "svelte"
+  | "aisdk"
+  | "websocket"
 
 type TechItem =
   | TechKey
@@ -121,7 +126,7 @@ const iconMap: Record<TechKey, TechIcon> = {
   redis: SiRedis,
   celery: SiCelery,
   tldraw: SiTldraw,
-  css3: SiCss3,
+  css3: SiCss,
   python: SiPython,
   anthropic: SiAnthropic,
   claude: SiClaude,
@@ -133,6 +138,8 @@ const iconMap: Record<TechKey, TechIcon> = {
   elasticsearch: SiElasticsearch,
   drizzle: SiDrizzle,
   svelte: SiSvelte,
+  aisdk: SiVercel,
+  websocket: TbPlugConnected
 };
 
 const techNames: Record<TechKey, string> = {
@@ -168,7 +175,9 @@ const techNames: Record<TechKey, string> = {
   kafka: "Apache Kafka",
   elasticsearch: "Elasticsearch",
   drizzle: "Drizzle ORM",
-  svelte: "svelte"
+  svelte: "svelte",
+  aisdk: "Ai SDK",
+  websocket: "websocket"
 };
 
 
@@ -419,6 +428,29 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
 
 
   const projects: Project[] = [
+    {
+      title: "Igris",
+      src: "/project-image/igris.jpg",
+      lightModeSrc: "/project-image/igris.jpg",
+      video: "",
+      description: "personal coding agent ,can be controlled via cli/telegram",
+      tech: ["ts", "bun", "aisdk"],
+      github: "https://github.com/anuzx/Igris",
+      live: "https://github.com/anuzx/Igris",
+      backgroundImage: ""
+    },
+    {
+      title: "cex",
+      src: "/coming_soon.jpg",
+      lightModeSrc: "coming_soon.jpg",
+      video: "",
+      description: "centralized spot exchange",
+      tech: ["ts", "prisma", "postgres", "redis", "websocket", "react"],
+      github: "https://github.com/anuzx/cex",
+      live: "",
+      backgroundImage: "/image copy 3.png"
+
+    },
     {
       title: "Mind Journal",
       src: "/coming_soon.jpg",

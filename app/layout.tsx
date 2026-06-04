@@ -26,7 +26,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "0xzdev",
+    title: "anuzx",
     description: "Focused on building robust backends & resilient systems",
   },
 };

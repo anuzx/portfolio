@@ -114,7 +114,7 @@ const GithubGraph = () => {
       <div className="w-auto border-t border-solid border-[var(--pattern-fg)] opacity-100 dark:opacity-15 mb-4 -mx-2 md:-mx-14"></div>
       <p className=" font-custom2 text-neutral-700 dark:text-neutral-300 mt-3 px-2 py-[7px]
            text-sm inline-block
-          bg-neutral-100 dark:bg-neutral-900 border-dashed border-neutral-300 dark:border-neutral-700 border mb-6"> I live spending time in open source,building real stuff and solving real problems</p>
+          bg-neutral-100 dark:bg-neutral-900 border-dashed border-neutral-300 dark:border-neutral-700 border mb-6"> I love spending time in open source,building real stuff and solving real problems</p>
 
 
 

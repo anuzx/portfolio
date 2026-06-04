@@ -2,7 +2,7 @@
 
 import Container from "@/components/containers";
 import { Github, Linkedin, Twitter } from "lucide-react";
-import DisplacementText from "@/components/ui/displacement-text";
+import { FaXTwitter } from "react-icons/fa6";
 import { toast } from "sonner";
 import { FlightButton } from "@/components/ui/flight-button";
 import { ChangeEvent, FormEvent, useState } from "react";
@@ -50,7 +50,7 @@ export default function Contact() {
 
   return (
     <div className="relative flex min-h-screen justify-center font-sans overflow-hidden">
-      <Container className="min-h-[200vh] px-8 pt-24 md:p-20 md:pb-10 mx-auto">
+      <Container className="min-h-screen px-8 pt-24 md:p-20 md:pb-10 mx-auto">
         {/* Background Pattern & Borders */}
         <div
           className="absolute right-0 top-0 h-full w-6 border-x border-x-(--pattern-fg) 
@@ -145,13 +145,13 @@ export default function Contact() {
 
             <div className="flex items-center gap-4">
               <a href="https://x.com/0xzdev" target="_blank" rel="noopener noreferrer">
-                <Twitter size={14} className="hover:text-neutral-900 dark:hover:text-neutral-200 cursor-pointer transition-colors" />
+                <FaXTwitter size={18} className="hover:text-neutral-900 dark:hover:text-neutral-200 cursor-pointer transition-colors" />
               </a>
               <a href="https://linkedin.com/in/your-linkedin" target="_blank" rel="noopener noreferrer">
-                <Linkedin size={14} className="hover:text-neutral-900 dark:hover:text-neutral-200 cursor-pointer transition-colors" />
+                <Linkedin size={18} className="hover:text-neutral-900 dark:hover:text-neutral-200 cursor-pointer transition-colors" />
               </a>
               <a href="https://github.com/anuzx" target="_blank" rel="noopener noreferrer">
-                <Github size={14} className="hover:text-neutral-900 dark:hover:text-neutral-200 cursor-pointer transition-colors" />
+                <Github size={18} className="hover:text-neutral-900 dark:hover:text-neutral-200 cursor-pointer transition-colors" />
               </a>
             </div>
           </div>

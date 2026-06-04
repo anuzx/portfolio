@@ -18,28 +18,34 @@ import {
   SiRabbitmq,
   SiApachekafka,
   SiDrizzle,
+  SiBun
 } from "react-icons/si";
 import { FaDatabase, FaLink, FaAws, FaCode } from "react-icons/fa";
+import { TbPlugConnected } from "react-icons/tb";
+import { icons } from "lucide-react";
 
 const skills = [
   { name: "JavaScript", icon: SiJavascript },
   { name: "TypeScript", icon: SiTypescript },
-  { name: "React", icon: SiReact },
-  { name: "NextJs", icon: SiNextdotjs },
   { name: "Express", icon: SiExpress },
   { name: "Nodejs", icon: SiNodedotjs },
+  { name: "Bun", icon: SiBun },
   { name: "Python", icon: SiPython },
   { name: "Langchain", icon: FaLink },
   { name: "Langgraph", icon: FaLink },
   { name: "Postgres", icon: SiPostgresql },
   { name: "Prisma", icon: SiPrisma },
   { name: "Drizzle", icon: SiDrizzle },
-  { name: "Docker", icon: SiDocker },
-  { name: "Kubernetes", icon: SiKubernetes },
   { name: "Redis", icon: SiRedis },
   { name: "Rabbitmq", icon: SiRabbitmq },
+  { name: "Bullmq", icon: SiRedis },
   { name: "Kafka", icon: SiApachekafka },
+  { name: "Websocket", icon: TbPlugConnected },
+  { name: "React", icon: SiReact },
+  { name: "NextJs", icon: SiNextdotjs },
   { name: "AWS", icon: FaAws },
+  { name: "Docker", icon: SiDocker },
+  { name: "Kubernetes", icon: SiKubernetes },
   { name: "Git", icon: SiGit },
 ];
 
