@@ -33,11 +33,6 @@ export default function Home() {
       action: () => window.open("https://x.com/0xzdev", "_blank"),
     },
     {
-      name: "Email",
-      icon: Mail,
-      action: () => (window.location.href = "mailto:your@email.com"),
-    },
-    {
       name: "Resume",
       icon: FileText,
       action: () => window.open("", "_blank")
@@ -81,7 +76,7 @@ export default function Home() {
                 onMouseLeave={() => setHoveredSocial(null)}
               >
                 <social.icon
-                  size={20}
+                  size={18}
                   className="text-neutral-900 dark:text-neutral-50 opacity-70 hover:opacity-100 transition"
                 />
                 <AnimatePresence>
@@ -1038,6 +1033,68 @@ export default function Home() {
     
 
     
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

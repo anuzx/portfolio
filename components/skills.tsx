@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   SiReact,
   SiJavascript,
@@ -10,6 +9,7 @@ import {
   SiPrisma,
   SiPostgresql,
   SiPython,
+  SiVercel,
   SiDocker,
   SiKubernetes,
   SiGit,
@@ -18,7 +18,8 @@ import {
   SiRabbitmq,
   SiApachekafka,
   SiDrizzle,
-  SiBun
+  SiBun,
+  SiCloudinary
 } from "react-icons/si";
 import { FaDatabase, FaLink, FaAws, FaCode } from "react-icons/fa";
 import { TbPlugConnected } from "react-icons/tb";
@@ -47,6 +48,8 @@ const skills = [
   { name: "Docker", icon: SiDocker },
   { name: "Kubernetes", icon: SiKubernetes },
   { name: "Git", icon: SiGit },
+  { name: "Cloudinary", icon: SiCloudinary },
+  { name: "Ai SDK", icon: SiVercel }
 ];
 
 export default function Skills() {
