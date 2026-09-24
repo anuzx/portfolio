@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import type { ComponentType } from "react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
@@ -42,6 +42,8 @@ import {
   SiSvelte,
   SiVercel,
   SiCloudinary,
+  SiGo,
+  SiOpenai,
 } from "react-icons/si";
 type TechIcon = ComponentType<{ className?: string }>;
 import { TbPlugConnected } from "react-icons/tb";
@@ -82,7 +84,9 @@ type TechKey =
   | "svelte"
   | "aisdk"
   | "websocket"
-  | "cloudinary";
+  | "cloudinary"
+  | "go"
+  | "openai";
 
 type TechItem =
   | TechKey
@@ -91,8 +95,15 @@ type TechItem =
       tooltip?: string;
     };
 
+// NEW ------------------------------------------------------------
+type Category = "full-stack" | "systems" | "applied ai";
+type Filter = "all" | Category;
+const FILTERS: Filter[] = ["all", "full-stack", "systems", "applied ai"];
+// ----------------------------------------------------------------
+
 interface Project {
   title: string;
+  categories: Category[]; // NEW
   src: string;
   lightModeSrc?: string;
   video: string;
@@ -102,6 +113,7 @@ interface Project {
   live: string;
   starsText?: string;
   backgroundImage?: string;
+  status?: "building" | "not-started";
 }
 
 const iconMap: Record<TechKey, TechIcon> = {
@@ -141,6 +153,8 @@ const iconMap: Record<TechKey, TechIcon> = {
   aisdk: SiVercel,
   websocket: TbPlugConnected,
   cloudinary: SiCloudinary,
+  go: SiGo,
+  openai: SiOpenai,
 };
 
 const techNames: Record<TechKey, string> = {
@@ -180,6 +194,8 @@ const techNames: Record<TechKey, string> = {
   aisdk: "Ai SDK",
   websocket: "websocket",
   cloudinary: "Cloudinary",
+  go: "go",
+  openai: "openai",
 };
 
 const ProjectCard = ({
@@ -326,19 +342,16 @@ const ProjectCard = ({
               )}
             </div>
             <div className="flex items-center gap-3">
-              {project.title !== "Scribble3D" &&
-                project.title !== "Blueprint" &&
-                project.title !== "RepoLens" &&
-                project.title !== "Inquiro" && (
-                  <Globe
-                    size={16}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      window.open(project.live, "_blank");
-                    }}
-                    className="cursor-pointer text-neutral-700 opacity-50 transition hover:opacity-100 dark:text-neutral-300"
-                  />
-                )}
+              {project.live && (
+                <Globe
+                  size={16}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(project.live, "_blank");
+                  }}
+                  className="cursor-pointer text-neutral-700 opacity-50 transition hover:opacity-100 dark:text-neutral-300"
+                />
+              )}
               <Github
                 size={16}
                 onClick={(e) => {
@@ -403,8 +416,8 @@ const ProjectCard = ({
             </div>
 
             {(() => {
-              const isNotStarted = project.title === "Inquiro";
-              const isBuilding = project.title === "Blueprint";
+              const isNotStarted = project.status === "not-started";
+              const isBuilding = project.status === "building";
 
               const dotColor = isNotStarted
                 ? "bg-neutral-400"
@@ -441,6 +454,7 @@ const ProjectCard = ({
 
 const Projects = ({ showAll = false }: { showAll?: boolean }) => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [filter, setFilter] = useState<Filter>("all"); // NEW
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -452,29 +466,34 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
 
   const projects: Project[] = [
     {
-      title: "Igris",
-      src: "/project-image/igris.jpg",
-      lightModeSrc: "/project-image/igris.jpg",
+      title: "Repolyzer",
+      categories: ["applied ai", "full-stack"],
+      src: "/project-image/repolyzer.png",
+      lightModeSrc: "/project-image/repolyzer.png",
       video: "",
-      description: "personal coding agent ,can be controlled via cli/telegram",
-      tech: ["ts", "bun", "aisdk"],
-      github: "https://github.com/anuzx/Igris",
-      live: "https://github.com/anuzx/Igris",
+      description:
+        "AI-powered GitHub repository analyzer that builds system architecture, repository knowledge graphs, and intelligent summaries, enabling context-aware conversations to understand and resolve repository issues",
+      tech: ["ts", "next", "cloudinary", "redis", "prisma", "postgres"],
+      github: "https://github.com/anuzx/Repolyzer",
+      live: "https://x.com/0xzdev/status/2086373140142358580",
       backgroundImage: "",
     },
     {
-      title: "Streamix",
-      src: "/project-image/streamix.jpg",
-      lightModeSrc: "/project-image/streamix.jpg",
+      title: "Grabpic",
+      categories: ["applied ai", "full-stack"],
+      src: "/project-image/grabpic.png",
+      lightModeSrc: "project-image/grabpic.png",
       video: "",
-      description: "video uploading platform with transcoding and hls pipeline",
-      tech: ["react", "ts", "mongodb", "redis", "cloudinary", "tailwind"],
-      github: "https://github.com/anuzx/Streamix",
-      live: "https://yourlive.com",
-      backgroundImage: "/image copy.png",
+      description:
+        "AI-powered event photo retrieval platform where organizers can upload event photos in bulk and attendees can instantly find photos containing them by uploading a selfie",
+      tech: ["ts", "react", "python", "postgres", "redis", "cloudinary"],
+      github: "https://github.com/anuzx/Grabpic",
+      live: "https://grabpic.framer.ai/",
+      backgroundImage: "/image copy 4.png",
     },
     {
       title: "Mind Journal",
+      categories: ["full-stack", "applied ai"],
       src: "/project-image/mind_journal.png",
       lightModeSrc: "/project-image/mind_journal.png",
       video: "",
@@ -485,9 +504,50 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       live: "https://mind-journal-pi.vercel.app/",
       backgroundImage: "",
     },
+    {
+      title: "zenocode",
+      categories: ["applied ai"],
+      src: "/project-image/zenocode.png",
+      lightModeSrc: "/project-image/zenocode.png",
+      video: "",
+      description:
+        "minimal terminal coding harness that runs bash commands and edits code inside a sandboxed workspace, spawn subagents to explore the codebase and does compaction to maintain context-window",
+      tech: ["python", "openai"],
+      github: "https://github.com/anuzx/ZenoCode",
+      live: "",
+      backgroundImage: "/image copy 2.png",
+    },
+    {
+      title: "doodle",
+      categories: ["full-stack"],
+      src: "/project-image/doodle.jpg",
+      lightModeSrc: "/project-image/doodle.jpg",
+      video: "",
+      description:
+        "Real-time multiplayer drawing & guessing game (Skribbl.io clone) built with raw WebSockets",
+      tech: ["ts", "websocket", "react", "tailwind"],
+      github: "https://github.com/anuzx/doodle",
+      live: "",
+      backgroundImage: "/image copy 2.png",
+      status: "building",
+    },
+    {
+      title: "Streamix",
+      categories: ["full-stack"],
+      src: "/project-image/streamix.jpg",
+      lightModeSrc: "/project-image/streamix.jpg",
+      video: "",
+      description: "video uploading platform with transcoding and hls pipeline",
+      tech: ["react", "ts", "mongodb", "redis", "cloudinary", "tailwind"],
+      github: "https://github.com/anuzx/Streamix",
+      live: "",
+      backgroundImage: "/image copy.png",
+      status: "building",
+    },
 
     {
       title: "Chess",
+      categories: ["full-stack"],
       src: "/project-image/chess.jpg",
       lightModeSrc: "/project-image/chess.jpg",
       video: "",
@@ -497,9 +557,23 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       github: "https://github.com/anuzx/chess",
       live: "",
       backgroundImage: "/image copy 3.png",
+      status: "building",
+    },
+    {
+      title: "load balancer",
+      categories: ["systems"],
+      src: "/project-image/loadbalancer.png",
+      lightModeSrc: "/project-image/loadbalancer.png",
+      video: "https://x.com/0xzdev/status/2102756997703840221",
+      description: "L7 Load Balancer in go using round robin algortihm",
+      tech: ["go"],
+      github: "https://github.com/anuzx/load_balancer",
+      live: "https://x.com/0xzdev/status/2102756997703840221",
+      backgroundImage: "/image copy 2.png",
     },
     {
       title: "cex",
+      categories: ["full-stack"],
       src: "/coming_soon.jpg",
       lightModeSrc: "coming_soon.jpg",
       video: "",
@@ -508,20 +582,12 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       github: "https://github.com/anuzx/cex",
       live: "",
       backgroundImage: "/image copy 3.png",
+      status: "building",
     },
-    {
-      title: "Grabpic",
-      src: "/coming_soon.jpg",
-      lightModeSrc: "/coming_soon.jpg",
-      video: "",
-      description: "ai powered photo grabbing platform",
-      tech: ["next", "ts", "bun", "gemini", "langchain", "langgraph"],
-      github: "https://github.com/anuzx/Grabpic",
-      live: "",
-      backgroundImage: "/image copy 4.png",
-    },
+
     {
       title: "SyncBoard",
+      categories: ["full-stack"],
       src: "/coming_soon.jpg",
       lightModeSrc: "/coming_soon.jpg",
       video: "",
@@ -529,9 +595,11 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       tech: ["next", "ts", "tailwind", "drizzle"],
       github: "https://github.com/anuzx/SyncBoard",
       live: "",
+      status: "building",
     },
     {
       title: "Pulse Guard",
+      categories: ["full-stack"],
       src: "/project-image/pulse.jpeg",
       lightModeSrc: "/project-image/pulse.jpeg",
       video: "",
@@ -544,31 +612,60 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
     },
   ];
 
+  // NEW
+  const filtered = projects.filter(
+    (p) => filter === "all" || p.categories.includes(filter),
+  );
+
   return (
     <div className="mt-8">
-      {/* Subtitle */}
-      <p className="font-custom2 mt-3 inline-block border border-dashed border-neutral-300 bg-neutral-100 px-4 py-[7px] text-sm text-neutral-700 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300">
-        I love building scalable backend systems and production-grade
-        applications.
-      </p>
+      {/* NEW: FILTERS (only on /projects) */}
+      {showAll && (
+        <div
+          className="mt-6 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm"
+          role="group"
+          aria-label="Filter projects"
+        >
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              aria-pressed={filter === f}
+              className={`underline-offset-4 transition-colors ${
+                filter === f
+                  ? "text-neutral-900 underline dark:text-neutral-50"
+                  : "text-neutral-400 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-neutral-100"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* GRID */}
       <div className="grid grid-cols-1 gap-6 py-8 md:grid-cols-2 lg:grid-cols-2">
-        {(showAll ? projects : projects.slice(0, 2)).map((project, idx) => (
-          <motion.div
-            key={project.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: idx * 0.1 }}
-          >
-            <ProjectCard
-              project={project}
-              idx={idx}
-              setActiveVideo={setActiveVideo}
-            />
-          </motion.div>
-        ))}
+        {(showAll ? filtered : projects.slice(0, 2)).map(
+          (
+            project,
+            idx, // NEW: filtered
+          ) => (
+            <motion.div
+              key={project.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.1 }}
+            >
+              <ProjectCard
+                project={project}
+                idx={idx}
+                setActiveVideo={setActiveVideo}
+              />
+            </motion.div>
+          ),
+        )}
       </div>
 
       {/* MODAL */}

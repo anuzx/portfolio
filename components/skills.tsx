@@ -19,7 +19,8 @@ import {
   SiApachekafka,
   SiDrizzle,
   SiBun,
-  SiCloudinary
+  SiCloudinary,
+  SiGo
 } from "react-icons/si";
 import { FaDatabase, FaLink, FaAws, FaCode } from "react-icons/fa";
 import { TbPlugConnected } from "react-icons/tb";
@@ -28,6 +29,7 @@ import { icons } from "lucide-react";
 const skills = [
   { name: "JavaScript", icon: SiJavascript },
   { name: "TypeScript", icon: SiTypescript },
+  { name: "Go", icon: SiGo },
   { name: "Express", icon: SiExpress },
   { name: "Nodejs", icon: SiNodedotjs },
   { name: "Bun", icon: SiBun },
@@ -49,7 +51,7 @@ const skills = [
   { name: "Kubernetes", icon: SiKubernetes },
   { name: "Git", icon: SiGit },
   { name: "Cloudinary", icon: SiCloudinary },
-  { name: "Ai SDK", icon: SiVercel }
+  { name: "Ai SDK", icon: SiVercel },
 ];
 
 export default function Skills() {

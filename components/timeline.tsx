@@ -68,51 +68,6 @@ export const Timeline = () => {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
 
   const data: Data[] = [
-    /*{
-      title: "Google Summer Of Code",
-      href: "https://summerofcode.withgoogle.com/",
-      content: [
-        {
-          title: "Google Summer Of Code",
-          description: `
-            Built scalable solutions for open source organizations
-            Received mentorship from top engineers and industry experts
-            Contributed real-world features that impacted thousands of users
-            Optimized codebase performance and reduced technical debt significantly
-          `,
-          src: "/Experience-image/Google_Summer_of_Code_sun_logo_2022.svg%20(1).png",
-          href: "https://summerofcode.withgoogle.com/",
-          tech: ["next", "ts", "react", "node"],
-          dates: "May 2025 - August 2025",
-          location: "Remote",
-          imageFit: "contain",
-          imageZoom: 0.9,
-        },
-      ],
-    },
-    {
-      title: "C4GT",
-      href: "https://c4gt.in/",
-      content: [
-        {
-          title: "C4GT",
-          description: `
-            Developed innovative tools solving real developer problems
-            Shipped production features with 10k+ downloads
-            Collaborated with open source maintainers and communities
-            Authored technical documentation to streamline developer onboarding
-          `,
-          src: "https://static.wixstatic.com/media/060b0c_8029055ce0074bfaa4bb6d9f1c2c33d2~mv2.png/v1/fill/w_2266,h_2168,al_c,q_95,usm_0.66_1.00_0.01,enc_auto/060b0c_8029055ce0074bfaa4bb6d9f1c2c33d2~mv2.png",
-          href: "https://c4gt.in/",
-          tech: ["prisma", "cloud", "langchain", "ts"],
-          dates: "May 2025 - August 2025",
-          location: "Remote",
-          imageFit: "contain",
-          imageZoom: 1.2,
-        },
-      ],
-    },
-    */
     {
       title: "Open Source Contributor",
       href: "https://github.com/",
