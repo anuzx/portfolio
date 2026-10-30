@@ -63,7 +63,7 @@ export default function Contact() {
           <span className="link--elara">Contact</span>
         </h1>
         <p className="font-custom2 mt-2 mb-12 max-w-lg text-sm tracking-tight text-neutral-600 md:text-base dark:text-neutral-400">
-          Hi there — I’m currently open to meaningful work.
+          Hi there, I’m currently open to meaningful work.
         </p>
 
         <div className="relative z-10 w-full max-w-2xl p-0 md:p-0">
@@ -92,7 +92,7 @@ export default function Contact() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                placeholder="Tyler Durden"
+                placeholder="John Doe"
                 className="font-custom2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all outline-none placeholder:text-neutral-400 focus:border-transparent focus:ring-2 focus:ring-neutral-400 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:ring-neutral-600"
               />
             </div>
@@ -111,7 +111,7 @@ export default function Contact() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="tyler@projectmayhem.com"
+                placeholder="johndoe@gmail.com"
                 className="font-custom2 w-full rounded-lg border border-neutral-200 bg-neutral-50 px-4 py-2.5 text-sm text-neutral-900 transition-all outline-none placeholder:text-neutral-400 focus:border-transparent focus:ring-2 focus:ring-neutral-400 dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 dark:focus:ring-neutral-600"
               />
             </div>

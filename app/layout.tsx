@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Footer from "@/components/footer";
 import Navbar from "@/components/Navbar";
 import { Instrument_Serif } from "next/font/google";
 import { Analytics } from '@vercel/analytics/react';
@@ -46,7 +45,6 @@ export default function RootLayout({
           <SpeedInsights />
           <Navbar />
           <main className="min-h-screen">{children}</main>
-          <Footer />
           <Toaster />
         </ThemeProvider>
       </body>

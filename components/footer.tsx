@@ -1,53 +1,52 @@
-import Link from 'next/link'
-import { Github, Linkedin } from 'lucide-react'
-import { FaXTwitter } from 'react-icons/fa6'
-import Container from './containers'
+import Link from "next/link";
+import { Github, Linkedin } from "lucide-react";
+import { FaXTwitter } from "react-icons/fa6";
 
 const Footer = () => {
   const socialLinks = [
     {
-      name: 'GitHub',
-      url: 'https://github.com/anuzx',
-      icon: Github
+      name: "GitHub",
+      url: "https://github.com/anuzx",
+      icon: Github,
     },
     {
-      name: 'Twitter',
-      url: 'https://x.com/0xzdev',
-      icon: FaXTwitter
+      name: "X",
+      url: "https://x.com/0xzdev",
+      icon: FaXTwitter,
     },
     {
-      name: 'LinkedIn',
-      url: 'https://www.linkedin.com/in/',
-      icon: Linkedin
+      name: "LinkedIn",
+      url: "https://www.linkedin.com/in/anuj-parasar-0a905b360",
+      icon: Linkedin,
     },
-  ]
+  ];
 
   return (
     <footer className="w-full bg-neutral-50 dark:bg-neutral-950">
-      <Container className="flex flex-col items-center justify-between gap-4 py-2  sm:flex-row border border-neutral-200 dark:border-neutral-800">
-        <p className="text-neutral-600 dark:text-neutral-400 text-sm font-custom2 tracking-normal transition-colors duration-300 hover:text-neutral-900 dark:hover:text-neutral-100">
-          Built with love by Anuj
-        </p>
-        <div className="flex items-center gap-4 ml-9">
-          {socialLinks.map((link) => {
-            const IconComponent = link.icon
-            return (
-              <Link
-                key={link.name}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-neutral-700 dark:text-neutral-50 opacity-70 hover:opacity-100 transition cursor-pointer "
-                title={link.name}
-              >
-                <IconComponent size={15} />
-              </Link>
-            )
-          })}
+      <div className="mx-auto w-full max-w-4xl px-8 sm:px-10 md:px-20">
+        <div className="mt-12 border-t border-neutral-200/70 pt-6 pb-6 dark:border-neutral-800/70">
+          <ul className="flex flex-row flex-wrap items-center gap-5">
+            {socialLinks.map((link) => {
+              const IconComponent = link.icon;
+              return (
+                <li key={link.name}>
+                  <Link
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+                  >
+                    <IconComponent size={16} />
+                    <span className="font-custom2 text-xs">{link.name}</span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
         </div>
-      </Container>
+      </div>
     </footer>
-  )
-}
+  );
+};
 
 export default Footer;

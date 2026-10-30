@@ -44,6 +44,7 @@ import {
   SiCloudinary,
   SiGo,
   SiOpenai,
+  SiRust,
 } from "react-icons/si";
 type TechIcon = ComponentType<{ className?: string }>;
 import { TbPlugConnected } from "react-icons/tb";
@@ -86,7 +87,8 @@ type TechKey =
   | "websocket"
   | "cloudinary"
   | "go"
-  | "openai";
+  | "openai"
+  | "rust";
 
 type TechItem =
   | TechKey
@@ -96,9 +98,9 @@ type TechItem =
     };
 
 // NEW ------------------------------------------------------------
-type Category = "full-stack" | "systems" | "applied ai";
+type Category = "full-stack" | "systems" | "applied ai" | "ml";
 type Filter = "all" | Category;
-const FILTERS: Filter[] = ["all", "full-stack", "systems", "applied ai"];
+const FILTERS: Filter[] = ["all", "full-stack", "systems", "applied ai", "ml"];
 // ----------------------------------------------------------------
 
 interface Project {
@@ -155,6 +157,7 @@ const iconMap: Record<TechKey, TechIcon> = {
   cloudinary: SiCloudinary,
   go: SiGo,
   openai: SiOpenai,
+  rust: SiRust,
 };
 
 const techNames: Record<TechKey, string> = {
@@ -196,6 +199,7 @@ const techNames: Record<TechKey, string> = {
   cloudinary: "Cloudinary",
   go: "go",
   openai: "openai",
+  rust: "rust",
 };
 
 const ProjectCard = ({
@@ -452,7 +456,69 @@ const ProjectCard = ({
   );
 };
 
-const Projects = ({ showAll = false }: { showAll?: boolean }) => {
+const ProjectListItem = ({
+  project,
+  idx,
+}: {
+  project: Project;
+  idx: number;
+}) => {
+  const href = project.live || project.github;
+
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group grid grid-cols-[2rem_1fr] gap-x-3 rounded-md py-3 outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 sm:grid-cols-[2.5rem_1fr] sm:gap-x-4"
+    >
+      <span className="font-custom2 pt-0.5 text-xs text-neutral-400 tabular-nums dark:text-neutral-500">
+        {String(idx + 1).padStart(2, "0")}
+      </span>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h3 className="font-custom2 text-sm font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
+            {project.title}
+            <span className="ml-1 inline-block text-neutral-400 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 dark:text-neutral-500">
+              ↗
+            </span>
+          </h3>
+          <span className="font-custom2 text-xs text-neutral-400 dark:text-neutral-500">
+            {project.categories.join(" · ")}
+          </span>
+          {project.status === "building" && (
+            <span className="font-custom2 text-[10px] tracking-widest text-red-400 uppercase dark:text-red-400">
+              building
+            </span>
+          )}
+          {project.status === "not-started" && (
+            <span className="font-custom2 text-[10px] tracking-widest text-neutral-400 uppercase dark:text-neutral-500">
+              not started
+            </span>
+          )}
+        </div>
+        <p className="font-custom2 mt-1 line-clamp-2 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
+          {project.description}
+        </p>
+        <p className="font-custom2 mt-1.5 text-xs text-neutral-400 dark:text-neutral-500">
+          {project.tech
+            .map((item) =>
+              typeof item === "string" ? techNames[item] : item.label,
+            )
+            .join(" · ")}
+        </p>
+      </div>
+    </a>
+  );
+};
+
+const Projects = ({
+  showAll = false,
+  variant = "cards",
+}: {
+  showAll?: boolean;
+  variant?: "cards" | "list";
+}) => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all"); // NEW
 
@@ -473,7 +539,7 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       video: "",
       description:
         "AI-powered GitHub repository analyzer that builds system architecture, repository knowledge graphs, and intelligent summaries, enabling context-aware conversations to understand and resolve repository issues",
-      tech: ["ts", "next", "cloudinary", "redis", "prisma", "postgres"],
+      tech: ["ts", "next", "redis", "prisma", "postgres"],
       github: "https://github.com/anuzx/Repolyzer",
       live: "https://x.com/0xzdev/status/2086373140142358580",
       backgroundImage: "",
@@ -493,12 +559,12 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
     },
     {
       title: "Mind Journal",
-      categories: ["full-stack", "applied ai"],
+      categories: ["applied ai", "full-stack"],
       src: "/project-image/mind_journal.png",
       lightModeSrc: "/project-image/mind_journal.png",
       video: "",
       description:
-        "store all your important stuff here and find them using AI search feature",
+        "AI-powered personal knowledge management system that automatically analyzes videos, documents, images, tweets, and links to generate summaries, tags, and searchable metadata",
       tech: ["react", "ts", "tailwind", "mongodb", "redis", "cloudinary"],
       github: "https://github.com/anuzx/Mind-Journal",
       live: "https://mind-journal-pi.vercel.app/",
@@ -516,6 +582,20 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       github: "https://github.com/anuzx/ZenoCode",
       live: "",
       backgroundImage: "/image copy 2.png",
+    },
+    {
+      title: "prepioz",
+      categories: ["applied ai", "full-stack"],
+      src: "/coming_soon.jpg",
+      lightModeSrc: "/coming_soon.jpg",
+      video: "",
+      description:
+        "interview preparation platform where people can come and submit their resume and github id and a voice agent will take their mock interview and give them a score",
+      tech: ["python", "postgres", "react"],
+      github: "https://github.com/anuzx/interview_agent",
+      live: "",
+      backgroundImage: "/image copy 2.png",
+      status: "building",
     },
     {
       title: "doodle",
@@ -572,10 +652,48 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
       backgroundImage: "/image copy 2.png",
     },
     {
+      title: "tcp echo server",
+      categories: ["systems"],
+      src: "/project-image/tcp.png",
+      lightModeSrc: "/project-image/tcp.png",
+      video: "https://x.com/0xzdev/status/2109741180162576530",
+      description: "server that sends back exactly what the client sends to it",
+      tech: ["rust"],
+      github: "https://github.com/anuzx/tcp_echo_server",
+      live: "https://x.com/0xzdev/status/2109741180162576530",
+      backgroundImage: "/image copy 2.png",
+    },
+    {
+      title: "ai-flappy bird",
+      categories: ["ml"],
+      src: "/project-image/bird.jpg",
+      lightModeSrc: "/project-image/bird.jpg",
+      video: "",
+      description:
+        "population of neural networks learns to play Flappy Bird through a genetic algorithm",
+      tech: ["ts"],
+      github: "https://github.com/anuzx/AI_flappy_bird",
+      live: "https://nnflappybird.netlify.app/",
+      backgroundImage: "/image copy.png",
+    },
+    {
+      title: "RL snake game",
+      categories: ["ml"],
+      src: "/project-image/snake.png",
+      lightModeSrc: "/project-image/snake.png",
+      video: "",
+      description:
+        "A snake that teaches itself to play Snake Game, trained live in the browser with a Deep Q-Network (DQN)",
+      tech: ["ts"],
+      github: "https://github.com/anuzx/RL_snake_game",
+      live: "https://rl-snakegame.netlify.app/",
+      backgroundImage: "/image copy.png",
+    },
+    {
       title: "cex",
       categories: ["full-stack"],
       src: "/coming_soon.jpg",
-      lightModeSrc: "coming_soon.jpg",
+      lightModeSrc: "/coming_soon.jpg",
       video: "",
       description: "centralized spot exchange",
       tech: ["ts", "prisma", "postgres", "redis", "websocket", "react"],
@@ -616,6 +734,33 @@ const Projects = ({ showAll = false }: { showAll?: boolean }) => {
   const filtered = projects.filter(
     (p) => filter === "all" || p.categories.includes(filter),
   );
+
+  if (variant === "list") {
+    return (
+      <section aria-labelledby="projects-heading">
+        <div className="mb-6 flex items-baseline justify-between border-b border-neutral-200 pb-3 dark:border-neutral-800">
+          <h2
+            id="projects-heading"
+            className="font-custom2 text-lg font-medium tracking-tight text-neutral-900 dark:text-neutral-100"
+          >
+            Projects
+          </h2>
+          <Link
+            href="/projects"
+            className="font-custom2 inline-flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+          >
+            all projects
+            <span aria-hidden="true">→</span>
+          </Link>
+        </div>
+        <div className="flex flex-col">
+          {projects.slice(0, 5).map((project, idx) => (
+            <ProjectListItem key={project.title} project={project} idx={idx} />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="mt-8">

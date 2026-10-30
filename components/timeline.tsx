@@ -1,17 +1,8 @@
-import React, { useState } from 'react';
-import { FiChevronDown } from 'react-icons/fi';
-import Image from 'next/image';
-import {
-  SiNextdotjs,
-  SiTypescript,
-  SiReact,
-  SiThreedotjs,
-  SiPrisma,
-  SiCloudflare,
-  SiLangchain,
-  SiNodedotjs,
-} from "react-icons/si";
-import { IconType } from "react-icons";
+"use client";
+
+import { useState } from "react";
+import { FiChevronDown } from "react-icons/fi";
+import Image from "next/image";
 
 type TechKey =
   | "next"
@@ -22,17 +13,6 @@ type TechKey =
   | "cloud"
   | "langchain"
   | "node";
-
-const iconMap: Record<TechKey, IconType> = {
-  next: SiNextdotjs,
-  ts: SiTypescript,
-  react: SiReact,
-  three: SiThreedotjs,
-  prisma: SiPrisma,
-  cloud: SiCloudflare,
-  langchain: SiLangchain,
-  node: SiNodedotjs,
-};
 
 const techNames: Record<TechKey, string> = {
   next: "Next.js",
@@ -63,7 +43,6 @@ type Data = {
 };
 
 export const Timeline = () => {
-  const [hoveredTech, setHoveredTech] = useState<string | null>(null);
   // Track which experience is open (by index)
   const [openIdx, setOpenIdx] = useState<number | null>(null);
 
@@ -89,128 +68,95 @@ export const Timeline = () => {
           imageZoom: 1.5,
         },
       ],
-    }
+    },
   ];
 
   return (
-    <div>
-
-      <h1 className="text-3xl md:text-3xl font-bold font-custom tracking-tight text-neutral-950 dark:text-neutral-50 pb-2 mt-2">
-        <span className="link--elara">Experiences</span>
-      </h1>
-      <div className="w-auto border-t border-solid border-[var(--pattern-fg)] opacity-100 dark:opacity-15 mb-4 -mx-2 md:-mx-14"></div>
-      <div className="flex flex-col gap-4">
+    <section aria-labelledby="experience-heading" className="font-sans">
+      <h2
+        id="experience-heading"
+        className="mb-6 border-b border-neutral-200 pb-3 text-lg font-medium tracking-tight text-neutral-900 dark:border-neutral-800 dark:text-neutral-100"
+      >
+        Experience
+      </h2>
+      <div className="space-y-6">
         {data.map((year, idx) => (
-          <div key={year.title} className="relative pb-2 -mx-2 md:-mx-14 px-2 md:px-14">
+          <div key={year.title}>
             {year.content.map((item, cidx) => {
-              const isOpen = openIdx === idx * 100 + cidx;
+              const itemIdx = idx * 100 + cidx;
+              const isOpen = openIdx === itemIdx;
+              const detailsId = `experience-details-${itemIdx}`;
+
               return (
-                <React.Fragment key={item.title}>
-                  <div
-                    className="flex items-center gap-4 group py-3 cursor-pointer"
-                    onClick={() => setOpenIdx(isOpen ? null : idx * 100 + cidx)}
+                <div key={item.title}>
+                  <button
+                    type="button"
+                    aria-expanded={isOpen}
+                    aria-controls={detailsId}
+                    onClick={() => setOpenIdx(isOpen ? null : itemIdx)}
+                    className="group flex w-full items-start gap-3 rounded-md  text-left outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 focus-visible:ring-offset-4 sm:items-center sm:gap-4 dark:focus-visible:ring-offset-neutral-950"
                   >
-                    {/* Logo */}
-                    <div className="w-12 h-12 rounded-lg border border-neutral-200/80 dark:border-neutral-700 p-[2px] bg-neutral-50 dark:bg-neutral-900 shrink-0">
-                      <div
-                        className={`w-full h-full rounded-md border border-neutral-200/60 dark:border-neutral-700/70 overflow-hidden ${item.imageFit === 'contain' ? 'bg-neutral-50 dark:bg-neutral-50' : 'bg-neutral-50 dark:bg-neutral-900'}`}
-                      >
-                        <Image
-                          src={item.src}
-                          alt={item.title}
-                          width={48}
-                          height={48}
-                          style={item.imageZoom ? { transform: `scale(${item.imageZoom})` } : undefined}
-                          className={`${item.imageFit === 'contain' ? 'object-contain' : 'object-cover'} w-full h-full`}
-                        />
-                      </div>
+                    <div className="h-9 w-9 shrink-0 overflow-hidden rounded-md bg-neutral-50 p-1 ring-1 ring-neutral-200 dark:ring-neutral-800">
+                      <Image
+                        src={item.src}
+                        alt=""
+                        width={36}
+                        height={36}
+                        className={`h-full w-full ${item.imageFit === "contain" ? "object-contain" : "object-cover"}`}
+                        style={
+                          item.imageZoom
+                            ? { transform: `scale(${item.imageZoom})` }
+                            : undefined
+                        }
+                      />
                     </div>
-                    {/* Main summary info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-base md:text-lg text-neutral-950 dark:text-neutral-50 truncate">
-                          {item.title}
-                        </span>
-                        {/* Optional: Full Time/Intern/Other badge */}
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+                      <span className="text-sm leading-6 font-medium text-neutral-900 dark:text-neutral-200">
+                        {item.title}
                         {item.type && (
-                          <span className="ml-2 px-2 py-0.5 rounded bg-neutral-700 text-xs text-neutral-100 font-medium border border-neutral-600">
+                          <span className="ml-2 text-xs font-normal text-neutral-500">
                             {item.type}
                           </span>
                         )}
-                      </div>
+                      </span>
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-5 text-neutral-500 sm:flex-col sm:items-end sm:gap-0">
+                        <span>{item.dates}</span>
+                        <span>{item.location || "Remote"}</span>
+                      </span>
                     </div>
-                    {/* Dates and location */}
-                    <div className="text-right min-w-[120px]">
-                      <div className="text-xs md:text-sm font-semibold text-neutral-950 dark:text-neutral-50">
-                        {item.dates || item.title}
-                      </div>
-                      <div className="text-xs text-neutral-600 dark:text-neutral-400">
-                        {item.location || "Remote"}
-                      </div>
-                    </div>
-                    {/* See/Arrow button */}
-                    <div
-                      className="ml-2 flex items-center justify-center w-7 h-7 p-0 bg-transparent border-none shadow-none focus:outline-none group"
-                    >
-                      <FiChevronDown
-                        className={`w-5 h-5 transition-transform duration-300 stroke-[2.2] ${isOpen ? 'rotate-180 text-neutral-950 dark:text-neutral-50' : 'text-neutral-500 dark:text-neutral-500 group-hover:text-neutral-950 dark:group-hover:text-neutral-50'}`}
-                        aria-hidden="true"
-                      />
-                      <span className="sr-only">{isOpen ? 'Hide details' : 'Show details'}</span>
-                    </div>
-                  </div>
-                  {/* Details section with smooth accordion animation */}
+                    <FiChevronDown
+                      aria-hidden="true"
+                      className={`mt-1 h-4 w-4 shrink-0 text-neutral-400 transition-transform motion-reduce:transition-none sm:mt-0 ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
                   <div
-                    className={`grid transition-[grid-template-rows] duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] ${isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}
+                    id={detailsId}
+                    hidden={!isOpen}
+                    className="pt-4 sm:pl-[52px]"
                   >
-                    <div className="overflow-hidden">
-                      {/* Inner container for padding control */}
-                      <div className={`${isOpen ? 'py-4 opacity-100 translate-y-0' : 'py-0 opacity-0 -translate-y-2'} transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]`}>
-                        <ul className="mb-4 list-disc list-inside pl-0 text-neutral-800 dark:text-neutral-200 text-sm space-y-2">
-                          {item.description
-                            .toString()
-                            .split("\n")
-                            .filter((line) => line.trim() !== "")
-                            .map((point, i) => (
-                              <li key={i}>{point}</li>
-                            ))}
-                        </ul>
-                        {/* Tech icons */}
-                        {item.tech && (
-                          <div className="flex flex-wrap gap-2">
-                            {item.tech.map((key) => {
-                              const name = techNames[key];
-                              return (
-                                <div
-                                  key={key}
-                                  className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-xs font-medium text-neutral-950 dark:text-neutral-200 shadow-sm"
-                                >
-                                  {name}
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
+                    <ul className="list-disc space-y-2 pl-4 text-sm leading-7 text-neutral-600 marker:text-neutral-400 dark:text-neutral-400">
+                      {item.description
+                        .split("\n")
+                        .filter((line) => line.trim())
+                        .map((point, i) => (
+                          <li key={i}>{point.trim()}</li>
+                        ))}
+                    </ul>
+                    {item.tech && (
+                      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-neutral-500">
+                        {item.tech.map((key) => (
+                          <span key={key}>{techNames[key]}</span>
+                        ))}
                       </div>
-                    </div>
+                    )}
                   </div>
-                </React.Fragment>
+                </div>
               );
             })}
-            {idx !== data.length - 1 && (
-              <div
-                className="absolute bottom-0 left-0 w-full h-[1px] opacity-100 dark:opacity-15"
-                style={{
-                  backgroundImage: "linear-gradient(to right, var(--pattern-fg) 50%, transparent 50%)",
-                  backgroundSize: "15px 1px",
-                  backgroundRepeat: "repeat-x"
-                }}
-              />
-            )}
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 };
 
