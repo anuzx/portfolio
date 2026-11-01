@@ -61,7 +61,7 @@ const Navbar = () => {
           borderRadius: "2.5rem",
         }}
         transition={{ type: "spring", stiffness: 100, damping: 20 }}
-        className="font-custom fixed inset-x-0 top-0 z-50 mx-auto flex w-full items-center bg-neutral-50/80 px-4 py-3 tracking-wide text-neutral-900 backdrop-blur-lg transition-colors duration-300 dark:bg-neutral-950/70 dark:text-neutral-50"
+        className="font-custom fixed inset-x-0 top-0 z-50 mx-auto flex w-full max-w-full items-center bg-neutral-50/80 px-4 py-3 tracking-wide text-neutral-900 backdrop-blur-lg transition-colors duration-300 dark:bg-neutral-950/70 dark:text-neutral-50"
       >
         <div
           className="flex w-full items-center justify-between"
@@ -75,7 +75,7 @@ const Navbar = () => {
                 href={item.href}
                 onMouseEnter={() => setHovered(item.href)}
                 aria-current={isActive(item.href) ? "page" : undefined}
-                className={`relative px-2.5 py-1.5 text-sm font-medium transition-colors md:px-3 ${
+                className={`relative px-2 py-2 text-xs font-medium transition-colors sm:px-2.5 sm:text-sm md:px-3 md:py-1.5 ${
                   isActive(item.href)
                     ? "text-neutral-900 dark:text-neutral-50"
                     : "text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-50"

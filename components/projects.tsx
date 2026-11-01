@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { ComponentType } from "react";
+import type { ComponentType, MouseEvent } from "react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
@@ -289,7 +289,7 @@ const ProjectCard = ({
                 e.stopPropagation();
                 setActiveVideo(project.video);
               }}
-              className="pointer-events-none absolute inset-0 z-40 flex items-center justify-center group-hover:pointer-events-auto"
+              className={`pointer-events-none absolute inset-0 z-40 flex items-center justify-center group-hover:pointer-events-auto ${project.video ? "" : "hidden"}`}
               variants={{
                 rest: { scale: 0.5, opacity: 0 },
                 hover: { scale: 1, opacity: 1 },
@@ -377,7 +377,7 @@ const ProjectCard = ({
             {project.description}
           </p>
 
-          <div className="flex items-center justify-between gap-3 pt-2">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <div className="flex flex-wrap gap-3">
               {project.tech.map((item) => {
                 const key = typeof item === "string" ? item : item.label;
@@ -471,7 +471,7 @@ const ProjectListItem = ({
   project: Project;
   idx: number;
   active: boolean;
-  onActivate: () => void;
+  onActivate: (e: MouseEvent) => void;
 }) => {
   const href = project.live || project.github;
 
@@ -539,7 +539,7 @@ const ProjectListSection = ({ items }: { items: Project[] }) => {
     mounted,
     listRef,
     activeIdx,
-    setHoveredIdx,
+    onRowEnter,
     onMouseMove,
     onMouseLeave,
     previewX,
@@ -580,7 +580,7 @@ const ProjectListSection = ({ items }: { items: Project[] }) => {
             project={project}
             idx={idx}
             active={activeIdx === idx}
-            onActivate={() => setHoveredIdx(idx)}
+            onActivate={(e) => onRowEnter(idx, e)}
           />
         ))}
       </div>

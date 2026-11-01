@@ -28,6 +28,7 @@ const GithubGraph = () => {
   >("all");
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [graphWidth, setGraphWidth] = useState(0);
 
   const initialCount = 2;
 
@@ -35,6 +36,7 @@ const GithubGraph = () => {
   // labels or the legend/count below), so its bounds are measured from the
   // rendered block rectangles.
   const calendarWrapRef = useRef<HTMLDivElement | null>(null);
+  const graphAreaRef = useRef<HTMLDivElement | null>(null);
   const [cellFrame, setCellFrame] = useState<{
     top: number;
     left: number;
@@ -67,7 +69,7 @@ const GithubGraph = () => {
       left = Math.min(left, b.left);
       right = Math.max(right, b.right);
     }
-    const pad = 8;
+    const pad = window.innerWidth < 768 ? 6 : 8;
     setCellFrame({
       top: top - wrapBox.top - pad,
       left: left - wrapBox.left - pad,
@@ -86,21 +88,39 @@ const GithubGraph = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  // Track the available width so the calendar can be sized to fit phones
+  // instead of overflowing to the side.
+  useEffect(() => {
+    if (!mounted) return;
+    const area = graphAreaRef.current;
+    if (!area) return;
+    const updateWidth = () => setGraphWidth(area.clientWidth);
+    updateWidth();
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(area);
+    return () => observer.disconnect();
+  }, [mounted]);
+
   // The graph loads its data async and its size changes (data load, resize,
   // mobile mode) — re-measure the cells whenever the SVG resizes.
   useEffect(() => {
     if (!mounted) return;
-    const svg = calendarWrapRef.current?.querySelector(
-      "svg.react-activity-calendar__calendar",
-    );
-    if (!svg) {
+    const wrap = calendarWrapRef.current;
+    if (!wrap) return;
+    const ro = new ResizeObserver(measureCells);
+    const attach = () => {
+      const svg = wrap.querySelector("svg.react-activity-calendar__calendar");
+      if (svg) ro.observe(svg);
       measureCells();
-      return;
-    }
-    measureCells();
-    const observer = new ResizeObserver(measureCells);
-    observer.observe(svg);
-    return () => observer.disconnect();
+    };
+    attach();
+    // The calendar loads async; re-attach when its SVG is added or replaced.
+    const mo = new MutationObserver(attach);
+    mo.observe(wrap, { childList: true, subtree: true });
+    return () => {
+      ro.disconnect();
+      mo.disconnect();
+    };
   }, [mounted, isMobile, measureCells]);
 
   useEffect(() => {
@@ -175,6 +195,24 @@ const GithubGraph = () => {
 
   const isDark = resolvedTheme === "dark";
 
+  // A year is 53 week columns. Size the cells from the measured container
+  // width so the graph always fits — phones, tablets, and desktop alike.
+  // Weekday labels are omitted: they sit outside the SVG and get clipped by
+  // the horizontal scroll container, and the month labels already give
+  // enough context.
+  const blockMargin = graphWidth >= 640 ? 3 : graphWidth >= 480 ? 2 : 1;
+  const blockSize = graphWidth
+    ? Math.max(
+        3,
+        Math.min(
+          10,
+          Math.floor((graphWidth - 52 * blockMargin) / 53),
+        ),
+      )
+    : 3;
+  const calendarFontSize = graphWidth < 380 ? 8 : graphWidth < 640 ? 10 : 12;
+  const showLegend = graphWidth >= 420;
+
   const calendarTheme = {
     light: ["#ffffff", "#d4d4d4", "#a3a3a3", "#525252", "#000000"],
     dark: ["#1f1f1f", "#404040", "#737373", "#bfbfbf", "#ffffff"],
@@ -189,8 +227,8 @@ const GithubGraph = () => {
         Proof of Work
       </h2>
       {/* Graph Component */}
-      <div className="flex w-full justify-center">
-        <div ref={calendarWrapRef} className="relative isolate w-fit">
+      <div ref={graphAreaRef} className="flex w-full justify-center">
+        <div ref={calendarWrapRef} className="relative isolate w-fit max-w-full">
           {cellFrame && (
             <div
               aria-hidden="true"
@@ -209,9 +247,12 @@ const GithubGraph = () => {
                 username="anuzx"
                 colorScheme={isDark ? "dark" : "light"}
                 theme={calendarTheme}
-                blockSize={isMobile ? 6 : 10}
-                blockMargin={isMobile ? 2 : 3}
-                fontSize={isMobile ? 10 : 12}
+                blockSize={blockSize}
+                blockMargin={blockMargin}
+                blockRadius={blockSize <= 6 ? 1 : 2}
+                fontSize={calendarFontSize}
+                showWeekdayLabels={false}
+                showColorLegend={showLegend}
                 style={{
                   color: isDark ? "#ffffff" : "#000000",
                 }}

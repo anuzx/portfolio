@@ -37,7 +37,7 @@ export default function Home() {
             className="h-16 w-16 shrink-0 rounded-full border border-neutral-200 object-cover dark:border-neutral-800"
           />
           <div>
-            <h1 className="font-custom text-4xl font-bold tracking-tight text-neutral-900 dark:text-neutral-50">
+            <h1 className="font-custom text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-neutral-50">
               Anuj Parasar
             </h1>
             <p className="font-custom2 mt-0.5 text-xs tracking-wide text-neutral-500 dark:text-neutral-400">
