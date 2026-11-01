@@ -1,11 +1,9 @@
 /* ✅ Correct Google Fonts imports */
 @import url("https://fonts.googleapis.com/css2?family=Instrument+Serif:ital,wght@0,400;1,400&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;700&display=swap");
-@plugin "@tailwindcss/typography";
 @import "tailwindcss";
 /* remove this line if you don't have it installed */
 @import "tw-animate-css";
-@import "cal-heatmap/cal-heatmap.css";
 
 
 @custom-variant dark (&:is(.dark *));
@@ -43,10 +41,6 @@
   --shadow-input: 0px 2px 3px -1px rgba(0, 0, 0, 0.1),
     0px 1px 0px 0px rgba(25, 28, 33, 0.02),
     0px 0px 0px 1px rgba(25, 28, 33, 0.08);
-  --section-shadow: rgba(34, 42, 53, 0.06) 0px 0px 24px, rgba(0, 0, 0, 0.05) 0px 1px 1px,
-    rgba(34, 42, 53, 0.04) 0px 0px 0px 1px, rgba(34, 42, 53, 0.08) 0px 0px 4px,
-    rgba(47, 48, 55, 0.05) 0px 16px 68px,
-    rgba(255, 255, 255, 0.1) 0px 1px 0px inset;
   --background: oklch(1 0 0);
   --muted: oklch(0.967 0.001 286.375);
   --muted-foreground: oklch(0.552 0.016 285.938);
@@ -92,98 +86,6 @@
       50% 0, 50% 100%, 50% 100%, 0 100%, 100% 100%, 100% 0%);
 }
 
-/* === Prose Styling for Dark Mode === */
-.prose {
-  @apply text-neutral-900 dark:text-neutral-100;
-}
-
-.prose p {
-  @apply text-neutral-700 dark:text-neutral-300;
-}
-
-.prose h1,
-.prose h2,
-.prose h3,
-.prose h4,
-.prose h5,
-.prose h6 {
-  @apply text-neutral-900 dark:text-neutral-50;
-}
-
-.prose a {
-  @apply text-blue-600 dark:text-blue-400 hover:underline;
-}
-
-.prose code {
-  @apply bg-blue-900 dark:bg-blue-900 text-blue-100 dark:text-blue-100 px-1.5 py-0.5 rounded text-sm font-mono;
-}
-
-.prose pre {
-  @apply bg-blue-900 dark:bg-blue-900 text-blue-100 dark:text-blue-100 p-4 rounded-lg overflow-x-auto border border-blue-800 dark:border-blue-800;
-}
-
-
-
-
-
-.prose strong {
-  @apply text-neutral-900 dark:text-neutral-50;
-}
-
-.prose ul,
-.prose ol {
-  @apply text-neutral-700 dark:text-neutral-300;
-}
-
-.prose li {
-  @apply text-neutral-700 dark:text-neutral-300;
-}
-
-
-/* === Scribble Animated Underline for Headings (.link--carme) === */
-
-.link--carme {
-  position: relative;
-  display: inline-block;
-  padding-bottom: 14px;
-  /* Space for underline */
-  cursor: pointer;
-  font-size: inherit;
-  /* Keeps original text size (e.g. h1, h2) */
-  font-weight: inherit;
-}
-
-/* Inline SVG container (automatically positioned) */
-.link--carme svg {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 120px;
-  /* Adjust length of scribble */
-  height: 18px;
-  pointer-events: none;
-}
-
-/* Scribble line style */
-.link--carme path {
-  stroke: currentColor;
-  /* Matches text color */
-  stroke-width: 2.3px;
-  fill: none;
-  stroke-linecap: round;
-
-  /* Hide stroke initially (for animation) */
-  stroke-dasharray: 200;
-  stroke-dashoffset: 200;
-
-  transition: stroke-dashoffset 0.5s ease-out;
-}
-
-/* Animate on hover */
-.link--carme:hover path {
-  stroke-dashoffset: 0;
-}
-
 @keyframes statusDotPulse {
   0%,
   100% {
@@ -195,4 +97,20 @@
     transform: scale(1.8);
     opacity: 0.12;
   }
+}
+
+/* Contribution graph spacing: nudge the cell grid down, and the count/legend
+   below the calendar down, so the glass frame wraps the cells only.
+   (Shifting the SVG month labels up instead gets clipped by the
+   scroll-container's hidden vertical overflow.) */
+.react-activity-calendar__calendar rect {
+  transform: translateY(3px);
+}
+
+.react-activity-calendar__scroll-container {
+  padding-bottom: 6px;
+}
+
+.react-activity-calendar__footer {
+  margin-top: 8px !important;
 }

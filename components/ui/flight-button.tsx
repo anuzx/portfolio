@@ -25,8 +25,6 @@ export function FlightButton({ className, onClick, ...props }: FlightButtonProps
     }
 
     // GSAP Animation
-    let getVar = (variable: string) => getComputedStyle(button).getPropertyValue(variable);
-
     // Make plane visible instantly for animation
     gsap.set(button, {
         '--plane-opacity': 1

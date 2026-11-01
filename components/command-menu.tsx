@@ -10,7 +10,6 @@ import {
   Moon,
   Sun,
   Laptop,
-  Search,
   Code,
   ArrowUp,
   ArrowDown,
@@ -38,8 +37,10 @@ export function CommandMenu() {
   const { setTheme } = useTheme();
 
   const openExternal = React.useCallback((url: string) => {
-    const opened = window.open(url, "_blank", "noopener,noreferrer");
-    if (!opened) window.location.assign(url);
+    // "noopener" makes window.open return null, so never treat that as a
+    // popup-block failure — otherwise we'd also navigate the current tab
+    // (the "two tabs" bug).
+    window.open(url, "_blank", "noopener,noreferrer");
   }, []);
 
   React.useEffect(() => {
@@ -212,7 +213,7 @@ export function CommandMenu() {
           <CommandGroup heading="Links">
             <CommandItem
               onSelect={() =>
-                runCommand(() => openExternal("https://twitter.com"))
+                runCommand(() => openExternal("https://x.com/0xzdev"))
               }
               className="rounded-lg py-3"
             >
@@ -224,7 +225,11 @@ export function CommandMenu() {
             </CommandItem>
             <CommandItem
               onSelect={() =>
-                runCommand(() => openExternal("https://linkedin.com"))
+                runCommand(() =>
+                  openExternal(
+                    "https://www.linkedin.com/in/anuj-parasar-0a905b360",
+                  ),
+                )
               }
               className="rounded-lg py-3"
             >
@@ -236,7 +241,7 @@ export function CommandMenu() {
             </CommandItem>
             <CommandItem
               onSelect={() =>
-                runCommand(() => openExternal("https://github.com"))
+                runCommand(() => openExternal("https://github.com/anuzx"))
               }
               className="rounded-lg py-3"
             >

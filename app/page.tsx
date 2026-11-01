@@ -53,8 +53,7 @@ export default function Home() {
           </strong>
           . Experienced in building scalable backend services, fault-tolerant
           systems, and AI-powered applications using modern frameworks and
-          infrastructure tools. Passionate about system design, Linux,
-          concurrency, and building reliable, production-oriented software.
+          infrastructure tools. Passionate about system design, concurrency, and building reliable, production-oriented software.
         </p>
         {/* Socials */}
         <div className="mt-5 flex flex-wrap items-center gap-2">
@@ -66,8 +65,8 @@ export default function Home() {
               rel="noopener noreferrer"
               className={`font-custom2 group flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs transition-all duration-300 ${
                 social.name === "Resume"
-                  ? "border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-100 dark:border-neutral-200 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-200"
-                  : "border-neutral-200/70 text-neutral-500 hover:border-neutral-300 hover:text-neutral-400 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-300"
+                  ? "border-neutral-900 bg-neutral-900 text-neutral-50 hover:bg-neutral-700 dark:border-neutral-100 dark:bg-white dark:text-neutral-900 dark:hover:bg-neutral-100"
+                  : "border-neutral-200/70 text-neutral-500 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600 dark:hover:text-neutral-100"
               }`}
             >
               {social.name}

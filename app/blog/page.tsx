@@ -17,10 +17,10 @@ export default async function BlogIndex() {
         {/* Header */}
         <div className="mb-3">
           <h1 className="font-custom text-3xl font-bold tracking-tight text-neutral-900 md:text-3xl dark:text-neutral-50">
-            <span className="link--elara">All blogs</span>
+            <span className="link--elara">All writings</span>
           </h1>
 
-          <p className="text-s font-custom2 mt-1 max-w-xl leading-relaxed tracking-tight text-neutral-600 dark:text-neutral-400">
+          <p className="font-custom2 mt-1 max-w-xl text-sm leading-relaxed tracking-tight text-neutral-600 dark:text-neutral-400">
             I write about software engineering, scalable systems, AI, backend
             architecture, and modern web development.
           </p>

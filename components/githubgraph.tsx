@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, cloneElement } from "react";
+import { useEffect, useState, cloneElement, useRef, useCallback } from "react";
 import { GitHubCalendar } from "react-github-calendar";
 import { useTheme } from "next-themes";
 import { Tooltip } from "react-tooltip";
@@ -19,19 +19,62 @@ interface PR {
 }
 
 const GithubGraph = () => {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [prs, setPrs] = useState<PR[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [filterType, setFilterType] = useState<
     "all" | "merged" | "open" | "closed"
   >("all");
-  const [showPRSection, setShowPRSection] = useState(true);
-  const [closedPRIds, setClosedPRIds] = useState<Set<number>>(new Set());
   const [mounted, setMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const initialCount = 2;
+
+  // Glass frame is painted around the calendar cells only (not the month
+  // labels or the legend/count below), so its bounds are measured from the
+  // rendered block rectangles.
+  const calendarWrapRef = useRef<HTMLDivElement | null>(null);
+  const [cellFrame, setCellFrame] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
+
+  const measureCells = useCallback(() => {
+    const wrap = calendarWrapRef.current;
+    if (!wrap) return;
+    const svg = wrap.querySelector("svg.react-activity-calendar__calendar");
+    if (!svg) {
+      setCellFrame(null);
+      return;
+    }
+    const rects = Array.from(svg.querySelectorAll("rect"));
+    if (rects.length === 0) {
+      setCellFrame(null);
+      return;
+    }
+    const wrapBox = wrap.getBoundingClientRect();
+    let top = Infinity;
+    let bottom = -Infinity;
+    let left = Infinity;
+    let right = -Infinity;
+    for (const r of rects) {
+      const b = r.getBoundingClientRect();
+      top = Math.min(top, b.top);
+      bottom = Math.max(bottom, b.bottom);
+      left = Math.min(left, b.left);
+      right = Math.max(right, b.right);
+    }
+    const pad = 8;
+    setCellFrame({
+      top: top - wrapBox.top - pad,
+      left: left - wrapBox.left - pad,
+      width: right - left + pad * 2,
+      height: bottom - top + pad * 2,
+    });
+  }, []);
 
   useEffect(() => {
     setMounted(true);
@@ -42,6 +85,23 @@ const GithubGraph = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  // The graph loads its data async and its size changes (data load, resize,
+  // mobile mode) — re-measure the cells whenever the SVG resizes.
+  useEffect(() => {
+    if (!mounted) return;
+    const svg = calendarWrapRef.current?.querySelector(
+      "svg.react-activity-calendar__calendar",
+    );
+    if (!svg) {
+      measureCells();
+      return;
+    }
+    measureCells();
+    const observer = new ResizeObserver(measureCells);
+    observer.observe(svg);
+    return () => observer.disconnect();
+  }, [mounted, isMobile, measureCells]);
 
   useEffect(() => {
     const fetchPRs = async () => {
@@ -87,9 +147,8 @@ const GithubGraph = () => {
 
         const data = await response.json();
         if (data.data?.search?.edges) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const fetchedPRs = data.data.search.edges.map(
-            (edge: any) => edge.node,
+          const fetchedPRs = (data.data.search.edges as { node: PR }[]).map(
+            (edge) => edge.node,
           );
           // Sort by date (newest first)
           fetchedPRs.sort((a: PR, b: PR) => {
@@ -114,11 +173,11 @@ const GithubGraph = () => {
     fetchPRs();
   }, [filterType]);
 
-  const isDark = theme === "dark";
+  const isDark = resolvedTheme === "dark";
 
   const calendarTheme = {
     light: ["#ffffff", "#d4d4d4", "#a3a3a3", "#525252", "#000000"],
-    dark: ["#000000", "#404040", "#737373", "#bfbfbf", "#ffffff"],
+    dark: ["#1f1f1f", "#404040", "#737373", "#bfbfbf", "#ffffff"],
   };
 
   return (
@@ -131,7 +190,19 @@ const GithubGraph = () => {
       </h2>
       {/* Graph Component */}
       <div className="flex w-full justify-center">
-        <div className="flex w-full justify-center">
+        <div ref={calendarWrapRef} className="relative isolate w-fit">
+          {cellFrame && (
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute -z-10 rounded-lg border border-neutral-200/60 bg-white/50 dark:border-white/[0.06] dark:bg-white/[0.02]"
+              style={{
+                top: cellFrame.top,
+                left: cellFrame.left,
+                width: cellFrame.width,
+                height: cellFrame.height,
+              }}
+            />
+          )}
           {mounted && (
             <>
               <GitHubCalendar
@@ -155,17 +226,14 @@ const GithubGraph = () => {
               <Tooltip
                 id="github-tooltip"
                 style={{
-                  backgroundColor: theme === "dark" ? "#171717" : "#ffffff",
-                  color: theme === "dark" ? "#e5e5e5" : "#171717",
+                  backgroundColor: isDark ? "#171717" : "#ffffff",
+                  color: isDark ? "#e5e5e5" : "#171717",
                   borderRadius: "8px",
                   padding: "8px 12px",
                   fontSize: "12px",
                   boxShadow:
                     "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                  border:
-                    theme === "dark"
-                      ? "1px solid #404040"
-                      : "1px solid #e5e5e5",
+                  border: isDark ? "1px solid #404040" : "1px solid #e5e5e5",
                   opacity: 1,
                 }}
               />
@@ -173,8 +241,7 @@ const GithubGraph = () => {
           )}
         </div>
       </div>
-      {showPRSection && (
-        <div className="mt-8">
+      <div className="mt-8">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
             <h3 className="font-custom2 text-xs font-medium tracking-widest uppercase text-neutral-400 dark:text-neutral-500">
               Pull requests
@@ -211,7 +278,6 @@ const GithubGraph = () => {
               <div className="mt-1 space-y-0.5">
                 {prs
                   .slice(0, showAll ? prs.length : initialCount)
-                  .filter((pr) => !closedPRIds.has(pr.id))
                   .map((pr) => (
                     <div
                       key={pr.id}
@@ -252,7 +318,7 @@ const GithubGraph = () => {
                   >
                     {showAll
                       ? "show less"
-                      : `${prs.length - closedPRIds.size - initialCount} more`}
+                      : `${prs.length - initialCount} more`}
                   </button>
                 </div>
               )}
@@ -263,7 +329,6 @@ const GithubGraph = () => {
             </div>
           )}
         </div>
-      )}
     </section>
   );
 };

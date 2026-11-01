@@ -20,7 +20,9 @@ import {
   SiDrizzle,
   SiBun,
   SiCloudinary,
-  SiGo
+  SiGo,
+  SiWebrtc,
+  SiElasticsearch,
 } from "react-icons/si";
 import { FaLink, FaAws } from "react-icons/fa";
 import { TbPlugConnected } from "react-icons/tb";
@@ -42,7 +44,9 @@ const skills = [
   { name: "Rabbitmq", icon: SiRabbitmq },
   { name: "Bullmq", icon: SiRedis },
   { name: "Kafka", icon: SiApachekafka },
+  {name: "Elasticsearch" , icon: SiElasticsearch},
   { name: "Websocket", icon: TbPlugConnected },
+  {name: "Web-RTC" , icon: SiWebrtc},
   { name: "React", icon: SiReact },
   { name: "NextJs", icon: SiNextdotjs },
   { name: "AWS", icon: FaAws },
@@ -63,14 +67,14 @@ export default function Skills() {
         Skills
       </h2>
 
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2.5">
+      <div className="flex flex-wrap gap-2">
         {skills.map((skill) => (
           <div
             key={skill.name}
-            className="flex cursor-default items-center gap-1.5 text-neutral-500 dark:text-neutral-400"
+            className="font-custom2 flex cursor-default items-center gap-1.5 rounded-md border border-neutral-200 px-2.5 py-1 text-xs text-neutral-600 transition-colors duration-200 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-200"
           >
-            <skill.icon className="h-4 w-4" />
-            <span className="font-custom2 text-xs">{skill.name}</span>
+            <skill.icon className="h-3.5 w-3.5 shrink-0" />
+            <span>{skill.name}</span>
           </div>
         ))}
       </div>

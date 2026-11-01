@@ -5,8 +5,11 @@ import type { ComponentType } from "react";
 import { useTheme } from "next-themes";
 import Image from "next/image";
 import Link from "next/link";
-import AnimatedButton from "@/components/ui/AnimatedButton";
 import { motion, AnimatePresence } from "framer-motion";
+import {
+  FloatingPreview,
+  useFloatingPreview,
+} from "@/components/hover-preview";
 import { Globe, Github, Star, X, Network, Search } from "lucide-react";
 import {
   SiNextdotjs,
@@ -45,6 +48,7 @@ import {
   SiGo,
   SiOpenai,
   SiRust,
+  SiWebrtc,
 } from "react-icons/si";
 type TechIcon = ComponentType<{ className?: string }>;
 import { TbPlugConnected } from "react-icons/tb";
@@ -88,7 +92,8 @@ type TechKey =
   | "cloudinary"
   | "go"
   | "openai"
-  | "rust";
+  | "rust"
+  | "webrtc";
 
 type TechItem =
   | TechKey
@@ -158,6 +163,7 @@ const iconMap: Record<TechKey, TechIcon> = {
   go: SiGo,
   openai: SiOpenai,
   rust: SiRust,
+  webrtc: SiWebrtc,
 };
 
 const techNames: Record<TechKey, string> = {
@@ -200,15 +206,14 @@ const techNames: Record<TechKey, string> = {
   go: "go",
   openai: "openai",
   rust: "rust",
+  webrtc: "webrtc",
 };
 
 const ProjectCard = ({
   project,
-  idx,
   setActiveVideo,
 }: {
   project: Project;
-  idx: number;
   setActiveVideo: (video: string) => void;
 }) => {
   const [hoveredTech, setHoveredTech] = useState<string | null>(null);
@@ -216,6 +221,7 @@ const ProjectCard = ({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -459,9 +465,13 @@ const ProjectCard = ({
 const ProjectListItem = ({
   project,
   idx,
+  active,
+  onActivate,
 }: {
   project: Project;
   idx: number;
+  active: boolean;
+  onActivate: () => void;
 }) => {
   const href = project.live || project.github;
 
@@ -470,9 +480,21 @@ const ProjectListItem = ({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="group grid grid-cols-[2rem_1fr] gap-x-3 rounded-md py-3 outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 sm:grid-cols-[2.5rem_1fr] sm:gap-x-4"
+      data-preview-row=""
+      onMouseEnter={onActivate}
+      className={`group relative -mx-2 grid grid-cols-[2rem_1fr] gap-x-3 rounded-lg px-2 py-3 transition-colors duration-200 outline-none focus-visible:ring-2 focus-visible:ring-neutral-400 sm:grid-cols-[2.5rem_1fr] sm:gap-x-4 ${
+        active
+          ? "bg-neutral-200/80 dark:bg-neutral-900/60"
+          : "hover:bg-neutral-200/80 dark:hover:bg-neutral-900/60"
+      }`}
     >
-      <span className="font-custom2 pt-0.5 text-xs text-neutral-400 tabular-nums dark:text-neutral-500">
+      <span
+        className={`font-custom2 pt-0.5 text-xs tabular-nums transition-colors ${
+          active
+            ? "text-neutral-600 dark:text-neutral-400"
+            : "text-neutral-400 dark:text-neutral-500"
+        }`}
+      >
         {String(idx + 1).padStart(2, "0")}
       </span>
       <div className="min-w-0">
@@ -497,7 +519,7 @@ const ProjectListItem = ({
             </span>
           )}
         </div>
-        <p className="font-custom2 mt-1 line-clamp-2 text-sm leading-6 text-neutral-600 dark:text-neutral-400">
+        <p className="font-custom2 mt-1 line-clamp-2 text-sm leading-6 text-neutral-600 transition-colors group-hover:text-neutral-800 dark:text-neutral-400 dark:group-hover:text-neutral-300">
           {project.description}
         </p>
         <p className="font-custom2 mt-1.5 text-xs text-neutral-400 dark:text-neutral-500">
@@ -509,6 +531,67 @@ const ProjectListItem = ({
         </p>
       </div>
     </a>
+  );
+};
+
+const ProjectListSection = ({ items }: { items: Project[] }) => {
+  const {
+    mounted,
+    listRef,
+    activeIdx,
+    setHoveredIdx,
+    onMouseMove,
+    onMouseLeave,
+    previewX,
+    previewY,
+  } = useFloatingPreview();
+
+  const active =
+    activeIdx !== null
+      ? { title: items[activeIdx].title, image: items[activeIdx].src }
+      : null;
+
+  return (
+    <section aria-labelledby="projects-heading">
+      <div className="mb-6 flex items-baseline justify-between border-b border-neutral-200 pb-3 dark:border-neutral-800">
+        <h2
+          id="projects-heading"
+          className="font-custom2 text-lg font-medium tracking-tight text-neutral-900 dark:text-neutral-100"
+        >
+          Projects
+        </h2>
+        <Link
+          href="/projects"
+          className="font-custom2 inline-flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
+        >
+          all projects
+          <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+      <div
+        ref={listRef}
+        className="flex flex-col"
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+      >
+        {items.map((project, idx) => (
+          <ProjectListItem
+            key={project.title}
+            project={project}
+            idx={idx}
+            active={activeIdx === idx}
+            onActivate={() => setHoveredIdx(idx)}
+          />
+        ))}
+      </div>
+
+      <FloatingPreview
+        mounted={mounted}
+        previewX={previewX}
+        previewY={previewY}
+        active={active}
+      />
+    </section>
   );
 };
 
@@ -584,6 +667,19 @@ const Projects = ({
       backgroundImage: "/image copy 2.png",
     },
     {
+      title: "paracosm",
+      categories: ["full-stack"],
+      src: "/project-image/paracosm.jpeg",
+      lightModeSrc: "/project-image/paracosm.jpeg",
+      video: "",
+      description:
+        "2d imaginary world, where people can create spaces, elements, choose their character, talk to each other and roam around",
+      tech: ["ts", "webrtc", "go", "react", "drizzle", "postgres"],
+      github: "https://github.com/anuzx/paracosm",
+      live: "",
+      backgroundImage: "/image copy.png",
+    },
+    {
       title: "prepioz",
       categories: ["applied ai", "full-stack"],
       src: "/coming_soon.jpg",
@@ -595,6 +691,19 @@ const Projects = ({
       github: "https://github.com/anuzx/interview_agent",
       live: "",
       backgroundImage: "/image copy 2.png",
+      status: "building",
+    },
+    {
+      title: "beru",
+      categories: ["applied ai", "full-stack"],
+      src: "/coming_soon.jpg",
+      lightModeSrc: "/coming_soon.jpg",
+      video: "",
+      description: "autonomous cloud coding agent",
+      tech: ["ts", "redis", "openai", "react", "drizzle"],
+      github: "https://github.com/anuzx/beru",
+      live: "",
+      backgroundImage: "/image copy 3.png",
       status: "building",
     },
     {
@@ -633,7 +742,7 @@ const Projects = ({
       video: "",
       description:
         "multiplayer realtime chess with chat and video calling feature",
-      tech: ["next", "ts", "tailwind", "prisma", "bun", "redis"],
+      tech: ["next", "ts", "tailwind", "prisma", "redis"],
       github: "https://github.com/anuzx/chess",
       live: "",
       backgroundImage: "/image copy 3.png",
@@ -710,7 +819,7 @@ const Projects = ({
       lightModeSrc: "/coming_soon.jpg",
       video: "",
       description: "collaborative doodling tool",
-      tech: ["next", "ts", "tailwind", "drizzle"],
+      tech: ["next", "ts", "tailwind", "drizzle", "websocket"],
       github: "https://github.com/anuzx/SyncBoard",
       live: "",
       status: "building",
@@ -736,30 +845,7 @@ const Projects = ({
   );
 
   if (variant === "list") {
-    return (
-      <section aria-labelledby="projects-heading">
-        <div className="mb-6 flex items-baseline justify-between border-b border-neutral-200 pb-3 dark:border-neutral-800">
-          <h2
-            id="projects-heading"
-            className="font-custom2 text-lg font-medium tracking-tight text-neutral-900 dark:text-neutral-100"
-          >
-            Projects
-          </h2>
-          <Link
-            href="/projects"
-            className="font-custom2 inline-flex items-center gap-1 text-sm text-neutral-500 transition-colors hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100"
-          >
-            all projects
-            <span aria-hidden="true">→</span>
-          </Link>
-        </div>
-        <div className="flex flex-col">
-          {projects.slice(0, 5).map((project, idx) => (
-            <ProjectListItem key={project.title} project={project} idx={idx} />
-          ))}
-        </div>
-      </section>
-    );
+    return <ProjectListSection items={projects.slice(0, 5)} />;
   }
 
   return (
@@ -803,11 +889,7 @@ const Projects = ({
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
-              <ProjectCard
-                project={project}
-                idx={idx}
-                setActiveVideo={setActiveVideo}
-              />
+              <ProjectCard project={project} setActiveVideo={setActiveVideo} />
             </motion.div>
           ),
         )}
@@ -855,22 +937,6 @@ const Projects = ({
           </motion.div>
         )}
       </AnimatePresence>
-
-      {!showAll && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          viewport={{ once: true }}
-          className="mt-4 flex justify-center"
-        >
-          <Link href="/projects">
-            <AnimatedButton className="group relative overflow-hidden rounded-lg border border-neutral-200 bg-linear-to-b from-white to-neutral-100 px-6 py-2.5 text-sm font-medium text-neutral-800 shadow-[0_1px_2px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,1)] transition-all duration-300 hover:from-neutral-50 hover:to-neutral-100 dark:border-neutral-800 dark:from-neutral-800 dark:to-neutral-900 dark:text-neutral-200 dark:shadow-[0_1px_2px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.05)] dark:hover:from-neutral-800 dark:hover:to-neutral-800">
-              View all projects
-            </AnimatedButton>
-          </Link>
-        </motion.div>
-      )}
     </div>
   );
 };

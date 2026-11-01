@@ -1,7 +1,7 @@
 "use client";
 
 import Container from "@/components/containers";
-import { Github, Linkedin, Twitter } from "lucide-react";
+import { Github, Linkedin } from "lucide-react";
 import { FaXTwitter } from "react-icons/fa6";
 import { toast } from "sonner";
 import { FlightButton } from "@/components/ui/flight-button";
@@ -49,7 +49,7 @@ export default function Contact() {
       } else {
         toast.error("Something went wrong. Please try again.");
       }
-    } catch (error) {
+    } catch {
       toast.error("Network error. Please try again.");
     } finally {
       setIsSubmitting(false);

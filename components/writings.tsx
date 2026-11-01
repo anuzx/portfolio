@@ -3,7 +3,7 @@ import { posts } from "@/lib/posts";
 
 const Writings = () => {
   return (
-    <section aria-labelledby="writings-heading">
+    <section aria-labelledby="writings-heading" className="w-full">
       <div className="mb-6 flex items-baseline justify-between border-b border-neutral-200 pb-3 dark:border-neutral-800">
         <h2
           id="writings-heading"
@@ -27,7 +27,7 @@ const Writings = () => {
             href={post.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="group block py-3"
+            className="group block rounded-lg px-2 py-3 transition-colors duration-200 outline-none hover:bg-neutral-200/80 focus-visible:ring-2 focus-visible:ring-neutral-400 dark:hover:bg-neutral-900/60"
           >
             <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
               <h3 className="font-custom2 text-sm font-medium tracking-tight text-neutral-900 dark:text-neutral-100">
