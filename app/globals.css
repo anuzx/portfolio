@@ -99,10 +99,9 @@
   }
 }
 
-/* Contribution graph spacing: nudge the cell grid down, and the count/legend
-   below the calendar down, so the glass frame wraps the cells only.
-   (Shifting the SVG month labels up instead gets clipped by the
-   scroll-container's hidden vertical overflow.) */
+/* Contribution graph spacing: nudge the cell grid down so there is a little
+   air between the month labels and the cells (shifting the labels up instead
+   gets clipped by the scroll-container's hidden vertical overflow). */
 .react-activity-calendar__calendar rect {
   transform: translateY(3px);
 }

@@ -1,16 +1,16 @@
 .button {
   /* =========================================
-     LIGHT MODE - Tasteful & Subtle Button
-     BUT -> Dark Plane (#171717)
+     LIGHT MODE - Solid Black Button
+     BUT -> White Plane
      ========================================= */
   
   /* Core Colors */
-  --btn-color: #fafafa;      /* Neutral 50 (Button BG) */
-  --btn-border: #e5e5e5;     /* Neutral 200 */
-  --text-color: #171717;     /* Neutral 900 */
+  --btn-color: #171717;      /* Solid black (Button BG) */
+  --btn-border: #171717;     /* Black border */
+  --text-color: #fafafa;     /* Neutral 50 */
   
   /* SINGLE SOURCE OF TRUTH for Plane Color */
-  --plane-fill-color: #171717; /* Solid Black in Light Mode */
+  --plane-fill-color: #fafafa; /* White plane on black */
   
   /* Deprecated/Mapped for safety */
   --left-plane-base: var(--plane-fill-color);
@@ -50,7 +50,7 @@
   --plane-x: 0;
   --plane-y: 0;
   --plane-opacity: 0; /* Hidden by default to prevent resting seams */
-  --trails: rgba(0, 0, 0, 0.4); /* Stronger trails */
+  --trails: rgba(255, 255, 255, 0.4); /* Visible on black button */
   --trails-stroke: 57;
 
   /* Wing Position Vars  (51/49 overlap to prevent gaps) */

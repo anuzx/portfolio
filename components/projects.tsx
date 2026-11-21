@@ -10,6 +10,7 @@ import {
   FloatingPreview,
   useFloatingPreview,
 } from "@/components/hover-preview";
+import { fetchStarsForRepos } from "@/lib/github";
 import { Globe, Github, Star, X, Network, Search } from "lucide-react";
 import {
   SiNextdotjs,
@@ -49,6 +50,7 @@ import {
   SiOpenai,
   SiRust,
   SiWebrtc,
+  SiC,
 } from "react-icons/si";
 type TechIcon = ComponentType<{ className?: string }>;
 import { TbPlugConnected } from "react-icons/tb";
@@ -93,7 +95,8 @@ type TechKey =
   | "go"
   | "openai"
   | "rust"
-  | "webrtc";
+  | "webrtc"
+  | "c";
 
 type TechItem =
   | TechKey
@@ -103,9 +106,9 @@ type TechItem =
     };
 
 // NEW ------------------------------------------------------------
-type Category = "full-stack" | "systems" | "applied ai" | "ml";
+type Category = "full-stack" | "systems" | "applied-ai" | "ml";
 type Filter = "all" | Category;
-const FILTERS: Filter[] = ["all", "full-stack", "systems", "applied ai", "ml"];
+const FILTERS: Filter[] = ["all", "full-stack", "applied-ai", "systems", "ml"];
 // ----------------------------------------------------------------
 
 interface Project {
@@ -118,10 +121,35 @@ interface Project {
   tech: TechItem[];
   github: string;
   live: string;
-  starsText?: string;
   backgroundImage?: string;
   status?: "building" | "not-started";
 }
+
+const StarCount = ({
+  count,
+  className = "",
+}: {
+  count?: number;
+  className?: string;
+}) => {
+  if (!count) return null;
+
+  return (
+    <span
+      title={`${count} ${count === 1 ? "star" : "stars"}`}
+      className={`font-custom2 text-xs whitespace-nowrap text-neutral-500 tabular-nums dark:text-neutral-400 ${className}`}
+    >
+      <Star
+        size={12}
+        strokeWidth={0}
+        fill="currentColor"
+        aria-hidden="true"
+        className="mr-1 inline-block align-[-0.125em] text-neutral-900 dark:text-white"
+      />
+      {count}
+    </span>
+  );
+};
 
 const iconMap: Record<TechKey, TechIcon> = {
   next: SiNextdotjs,
@@ -164,6 +192,7 @@ const iconMap: Record<TechKey, TechIcon> = {
   openai: SiOpenai,
   rust: SiRust,
   webrtc: SiWebrtc,
+  c: SiC,
 };
 
 const techNames: Record<TechKey, string> = {
@@ -207,14 +236,44 @@ const techNames: Record<TechKey, string> = {
   openai: "openai",
   rust: "rust",
   webrtc: "webrtc",
+  c: "c",
+};
+
+const isYouTubeUrl = (url: string) =>
+  url.includes("youtube.com") || url.includes("youtu.be");
+
+const getYouTubeEmbedUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+
+    if (parsed.hostname === "youtu.be") {
+      return `https://www.youtube.com/embed${parsed.pathname}`;
+    }
+
+    if (parsed.hostname.endsWith("youtube.com")) {
+      if (parsed.pathname === "/watch") {
+        const id = parsed.searchParams.get("v");
+        if (id) return `https://www.youtube.com/embed/${id}`;
+      }
+
+      const match = parsed.pathname.match(/^\/(shorts|embed|live)\/([\w-]+)/);
+      if (match) return `https://www.youtube.com/embed/${match[2]}`;
+    }
+  } catch {
+    return url;
+  }
+
+  return url;
 };
 
 const ProjectCard = ({
   project,
   setActiveVideo,
+  starCount,
 }: {
   project: Project;
   setActiveVideo: (video: string) => void;
+  starCount?: number;
 }) => {
   const [hoveredTech, setHoveredTech] = useState<string | null>(null);
   const { theme } = useTheme();
@@ -243,7 +302,12 @@ const ProjectCard = ({
         {/* Image container wrapper - Clean style */}
         <div className="rounded-[12px] border border-neutral-200 bg-neutral-50 p-[4px] dark:border-neutral-800 dark:bg-neutral-900/50">
           {/* Main Image container */}
-          <div className="relative h-[220px] w-full overflow-hidden rounded-[8px] border border-neutral-200 bg-neutral-100 select-none dark:border-neutral-800 dark:bg-neutral-900">
+          <div
+            className={`relative h-[220px] w-full overflow-hidden rounded-[8px] border border-neutral-200 bg-neutral-100 select-none dark:border-neutral-800 dark:bg-neutral-900 ${project.video ? "cursor-pointer" : ""}`}
+            onClick={() => {
+              if (project.video) setActiveVideo(project.video);
+            }}
+          >
             {/* Ambient Background - Image Style */}
             <motion.div
               className="absolute inset-0 bg-cover bg-center"
@@ -340,16 +404,7 @@ const ProjectCard = ({
               <h3 className="font-custom truncate text-lg font-bold tracking-wide text-neutral-900 transition-colors duration-300 dark:text-neutral-100">
                 {project.title}
               </h3>
-              {project.starsText && (
-                <span className="font-custom2 inline-flex shrink-0 items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50/80 px-2 py-0.5 text-[10px] font-medium text-neutral-700 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/40 dark:text-neutral-200">
-                  <Star
-                    size={12}
-                    fill="currentColor"
-                    className="text-amber-500/90 dark:text-amber-400"
-                  />
-                  <span>{project.starsText}</span>
-                </span>
-              )}
+              <StarCount count={starCount} className="text-[11px]" />
             </div>
             <div className="flex items-center gap-3">
               {project.live && (
@@ -467,11 +522,13 @@ const ProjectListItem = ({
   idx,
   active,
   onActivate,
+  starCount,
 }: {
   project: Project;
   idx: number;
   active: boolean;
   onActivate: (e: MouseEvent) => void;
+  starCount?: number;
 }) => {
   const href = project.live || project.github;
 
@@ -508,6 +565,7 @@ const ProjectListItem = ({
           <span className="font-custom2 text-xs text-neutral-400 dark:text-neutral-500">
             {project.categories.join(" · ")}
           </span>
+          <StarCount count={starCount} />
           {project.status === "building" && (
             <span className="font-custom2 text-[10px] tracking-widest text-red-400 uppercase dark:text-red-400">
               building
@@ -534,7 +592,13 @@ const ProjectListItem = ({
   );
 };
 
-const ProjectListSection = ({ items }: { items: Project[] }) => {
+const ProjectListSection = ({
+  items,
+  stars,
+}: {
+  items: Project[];
+  stars: Record<string, number>;
+}) => {
   const {
     mounted,
     listRef,
@@ -581,6 +645,7 @@ const ProjectListSection = ({ items }: { items: Project[] }) => {
             idx={idx}
             active={activeIdx === idx}
             onActivate={(e) => onRowEnter(idx, e)}
+            starCount={stars[project.github]}
           />
         ))}
       </div>
@@ -595,6 +660,273 @@ const ProjectListSection = ({ items }: { items: Project[] }) => {
   );
 };
 
+const projects: Project[] = [
+  {
+    title: "Repolyzer",
+    categories: ["applied-ai", "full-stack"],
+    src: "/project-image/repolyzer.png",
+    lightModeSrc: "/project-image/repolyzer.png",
+    video: "",
+    description:
+      "AI-powered GitHub repository analyzer that builds system architecture, repository knowledge graphs, and intelligent summaries, enabling context-aware conversations to understand and resolve repository issues",
+    tech: ["ts", "next", "redis", "prisma", "postgres"],
+    github: "https://github.com/anuzx/Repolyzer",
+    live: "https://x.com/0xzdev/status/2086373140142358580",
+    backgroundImage: "",
+  },
+  {
+    title: "Shokunin",
+    categories: ["applied-ai", "full-stack"],
+    src: "/project-image/shokunin.png",
+    lightModeSrc: "/project-image/shokunin.png",
+    video: "",
+    description:
+      "Autonomous cloud-native AI coding agent. Give it a repo link and it clones the repo, fixes the issue in an isolated E2B sandbox, runs the tests, and opens a pull request.",
+    tech: ["ts", "redis", "openai", "react", "drizzle"],
+    github: "https://github.com/anuzx/shokunin",
+    live: "",
+    backgroundImage: "/image copy 3.png",
+  },
+  {
+    title: "Zenocode",
+    categories: ["applied-ai"],
+    src: "/project-image/zenocode.png",
+    lightModeSrc: "/project-image/zenocode.png",
+    video: "",
+    description:
+      "Minimal terminal coding harness that runs bash commands and edits code inside a sandboxed workspace, spawn subagents to explore the codebase and does compaction to maintain context-window.",
+    tech: ["python", "openai"],
+    github: "https://github.com/anuzx/ZenoCode",
+    live: "https://x.com/0xzdev/status/2106736513639919728",
+    backgroundImage: "/image copy 2.png",
+  },
+  {
+    title: "Load balancer",
+    categories: ["systems"],
+    src: "/project-image/loadbalancer.png",
+    lightModeSrc: "/project-image/loadbalancer.png",
+    video: "https://www.youtube.com/watch?v=QfwipziAZyA",
+    description: "L7 Load Balancer in go with pluggable algorithm selection.",
+    tech: ["go"],
+    github: "https://github.com/anuzx/load_balancer",
+    live: "https://x.com/0xzdev/status/2102756997703840221",
+    backgroundImage: "/image copy 2.png",
+  },
+  {
+    title: "Http server",
+    categories: ["systems"],
+    src: "/project-image/http.png",
+    lightModeSrc: "/project-image/http.png",
+    video: "https://www.youtube.com/watch?v=ruDG1zLGZIk",
+    description:
+      "A lightweight HTTP/1.1 server built from scratch using Rust TCP primitives.",
+    tech: ["rust"],
+    github: "https://github.com/anuzx/http-rust-server",
+    live: "https://x.com/0xzdev/status/2119885630637506699",
+    backgroundImage: "/image copy 2.png",
+  },
+  {
+    title: "Grabpic",
+    categories: ["applied-ai", "full-stack"],
+    src: "/project-image/grabpic.png",
+    lightModeSrc: "project-image/grabpic.png",
+    video: "",
+    description:
+      "AI-powered event photo retrieval platform where organizers can upload event photos in bulk and attendees can instantly find photos containing them by uploading a selfie",
+    tech: ["ts", "react", "python", "postgres", "redis", "cloudinary"],
+    github: "https://github.com/anuzx/Grabpic",
+    live: "https://grabpic.framer.ai/",
+    backgroundImage: "/image copy 4.png",
+  },
+  {
+    title: "Mind Journal",
+    categories: ["applied-ai", "full-stack"],
+    src: "/project-image/mind_journal.png",
+    lightModeSrc: "/project-image/mind_journal.png",
+    video: "",
+    description:
+      "AI-powered personal knowledge management system that automatically analyzes videos, documents, images, tweets, and links to generate summaries, tags, and searchable metadata",
+    tech: ["react", "ts", "tailwind", "mongodb", "redis", "cloudinary"],
+    github: "https://github.com/anuzx/Mind-Journal",
+    live: "https://mind-journal-pi.vercel.app/",
+    backgroundImage: "",
+  },
+
+  {
+    title: "paracosm",
+    categories: ["full-stack"],
+    src: "/project-image/paracosm.jpeg",
+    lightModeSrc: "/project-image/paracosm.jpeg",
+    video: "",
+    description:
+      "2d imaginary world, where people can create spaces, elements, choose their character, talk to each other and roam around",
+    tech: ["ts", "webrtc", "go", "react", "drizzle", "postgres"],
+    github: "https://github.com/anuzx/paracosm",
+    live: "",
+    backgroundImage: "/image copy.png",
+  },
+  {
+    title: "krites",
+    categories: ["applied-ai", "full-stack"],
+    src: "/coming_soon.jpg",
+    lightModeSrc: "/coming_soon.jpg",
+    video: "",
+    description:
+      "AI mock-interview agent. Talk to a voice agent that asks questions based on your resume and GitHub projects, then get an unbiased summary and a full transcript.",
+    tech: ["python", "postgres", "react"],
+    github: "https://github.com/anuzx/interview_agent",
+    live: "",
+    backgroundImage: "/image copy 2.png",
+    status: "building",
+  },
+
+  {
+    title: "doodle",
+    categories: ["full-stack"],
+    src: "/project-image/doodle.jpg",
+    lightModeSrc: "/project-image/doodle.jpg",
+    video: "",
+    description:
+      "Real-time multiplayer drawing & guessing game (Skribbl.io clone) built with raw WebSockets",
+    tech: ["ts", "websocket", "react", "tailwind"],
+    github: "https://github.com/anuzx/doodle",
+    live: "",
+    backgroundImage: "/image copy 2.png",
+    status: "building",
+  },
+  {
+    title: "Streamix",
+    categories: ["full-stack"],
+    src: "/project-image/streamix.jpg",
+    lightModeSrc: "/project-image/streamix.jpg",
+    video: "",
+    description: "video uploading platform with transcoding and hls pipeline",
+    tech: ["react", "ts", "mongodb", "redis", "cloudinary", "tailwind"],
+    github: "https://github.com/anuzx/Streamix",
+    live: "",
+    backgroundImage: "/image copy.png",
+    status: "building",
+  },
+
+  {
+    title: "Chess",
+    categories: ["full-stack"],
+    src: "/project-image/chess.jpg",
+    lightModeSrc: "/project-image/chess.jpg",
+    video: "",
+    description:
+      "multiplayer realtime chess with chat and video calling feature",
+    tech: ["next", "ts", "tailwind", "prisma", "redis"],
+    github: "https://github.com/anuzx/chess",
+    live: "",
+    backgroundImage: "/image copy 3.png",
+    status: "building",
+  },
+
+  {
+    title: "compressor",
+    categories: ["systems"],
+    src: "/project-image/compressor.png",
+    lightModeSrc: "/project-image/compressor.png",
+    video: "",
+    description: "implemented huffman compressor in C",
+    tech: ["c"],
+    github: "https://github.com/anuzx/compressor",
+    live: "",
+    backgroundImage: "/image copy 2.png",
+  },
+  {
+    title: "tcp echo server",
+    categories: ["systems"],
+    src: "/project-image/tcp.png",
+    lightModeSrc: "/project-image/tcp.png",
+    video: "",
+    description: "server that sends back exactly what the client sends to it",
+    tech: ["rust"],
+    github: "https://github.com/anuzx/tcp_echo_server",
+    live: "https://x.com/0xzdev/status/2109741180162576530",
+    backgroundImage: "/image copy 2.png",
+  },
+  {
+    title: "multi_lingual-count_prime",
+    categories: ["systems"],
+    src: "/project-image/gcc.png",
+    lightModeSrc: "/project-image/gcc.png",
+    video: "https://www.youtube.com/watch?v=cFnfN3QRy-s",
+    description:
+      "simple count_prime program written in rust and c to test multi-lingualism",
+    tech: ["rust", "c"],
+    github: "https://github.com/anuzx/multi-lingual_count_prime",
+    live: "https://x.com/0xzdev/status/2121576843384074583",
+    backgroundImage: "/image copy 2.png",
+  },
+  {
+    title: "ai-flappy bird",
+    categories: ["ml"],
+    src: "/project-image/bird.jpg",
+    lightModeSrc: "/project-image/bird.jpg",
+    video: "",
+    description:
+      "population of neural networks learns to play Flappy Bird through a genetic algorithm",
+    tech: ["ts"],
+    github: "https://github.com/anuzx/AI_flappy_bird",
+    live: "https://nnflappybird.netlify.app/",
+    backgroundImage: "/image copy.png",
+  },
+  {
+    title: "RL snake game",
+    categories: ["ml"],
+    src: "/project-image/snake.png",
+    lightModeSrc: "/project-image/snake.png",
+    video: "",
+    description:
+      "A snake that teaches itself to play Snake Game, trained live in the browser with a Deep Q-Network (DQN)",
+    tech: ["ts"],
+    github: "https://github.com/anuzx/RL_snake_game",
+    live: "https://rl-snakegame.netlify.app/",
+    backgroundImage: "/image copy.png",
+  },
+  {
+    title: "cex",
+    categories: ["full-stack"],
+    src: "/coming_soon.jpg",
+    lightModeSrc: "/coming_soon.jpg",
+    video: "",
+    description: "centralized spot exchange",
+    tech: ["ts", "prisma", "postgres", "redis", "websocket", "react"],
+    github: "https://github.com/anuzx/cex",
+    live: "",
+    backgroundImage: "/image copy 3.png",
+    status: "building",
+  },
+
+  {
+    title: "SyncBoard",
+    categories: ["full-stack"],
+    src: "/coming_soon.jpg",
+    lightModeSrc: "/coming_soon.jpg",
+    video: "",
+    description: "collaborative doodling tool",
+    tech: ["next", "ts", "tailwind", "drizzle", "websocket"],
+    github: "https://github.com/anuzx/SyncBoard",
+    live: "",
+    status: "building",
+  },
+  {
+    title: "Pulse Guard",
+    categories: ["full-stack"],
+    src: "/project-image/pulse.jpeg",
+    lightModeSrc: "/project-image/pulse.jpeg",
+    video: "",
+    description:
+      "Real-time log monitoring and intelligent threat detection for modern applications.",
+    tech: ["python", "fastapi", "svelte", "kafka"],
+    github: "https://github.com/anuzx/Pulse_Guard",
+    live: "",
+    backgroundImage: "/image copy 2.png",
+  },
+];
+
 const Projects = ({
   showAll = false,
   variant = "cards",
@@ -604,6 +936,7 @@ const Projects = ({
 }) => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all"); // NEW
+  const [stars, setStars] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -613,239 +946,33 @@ const Projects = ({
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const projects: Project[] = [
-    {
-      title: "Repolyzer",
-      categories: ["applied ai", "full-stack"],
-      src: "/project-image/repolyzer.png",
-      lightModeSrc: "/project-image/repolyzer.png",
-      video: "",
-      description:
-        "AI-powered GitHub repository analyzer that builds system architecture, repository knowledge graphs, and intelligent summaries, enabling context-aware conversations to understand and resolve repository issues",
-      tech: ["ts", "next", "redis", "prisma", "postgres"],
-      github: "https://github.com/anuzx/Repolyzer",
-      live: "https://x.com/0xzdev/status/2086373140142358580",
-      backgroundImage: "",
-    },
-    {
-      title: "Grabpic",
-      categories: ["applied ai", "full-stack"],
-      src: "/project-image/grabpic.png",
-      lightModeSrc: "project-image/grabpic.png",
-      video: "",
-      description:
-        "AI-powered event photo retrieval platform where organizers can upload event photos in bulk and attendees can instantly find photos containing them by uploading a selfie",
-      tech: ["ts", "react", "python", "postgres", "redis", "cloudinary"],
-      github: "https://github.com/anuzx/Grabpic",
-      live: "https://grabpic.framer.ai/",
-      backgroundImage: "/image copy 4.png",
-    },
-    {
-      title: "Mind Journal",
-      categories: ["applied ai", "full-stack"],
-      src: "/project-image/mind_journal.png",
-      lightModeSrc: "/project-image/mind_journal.png",
-      video: "",
-      description:
-        "AI-powered personal knowledge management system that automatically analyzes videos, documents, images, tweets, and links to generate summaries, tags, and searchable metadata",
-      tech: ["react", "ts", "tailwind", "mongodb", "redis", "cloudinary"],
-      github: "https://github.com/anuzx/Mind-Journal",
-      live: "https://mind-journal-pi.vercel.app/",
-      backgroundImage: "",
-    },
-    {
-      title: "zenocode",
-      categories: ["applied ai"],
-      src: "/project-image/zenocode.png",
-      lightModeSrc: "/project-image/zenocode.png",
-      video: "",
-      description:
-        "minimal terminal coding harness that runs bash commands and edits code inside a sandboxed workspace, spawn subagents to explore the codebase and does compaction to maintain context-window",
-      tech: ["python", "openai"],
-      github: "https://github.com/anuzx/ZenoCode",
-      live: "",
-      backgroundImage: "/image copy 2.png",
-    },
-    {
-      title: "paracosm",
-      categories: ["full-stack"],
-      src: "/project-image/paracosm.jpeg",
-      lightModeSrc: "/project-image/paracosm.jpeg",
-      video: "",
-      description:
-        "2d imaginary world, where people can create spaces, elements, choose their character, talk to each other and roam around",
-      tech: ["ts", "webrtc", "go", "react", "drizzle", "postgres"],
-      github: "https://github.com/anuzx/paracosm",
-      live: "",
-      backgroundImage: "/image copy.png",
-    },
-    {
-      title: "prepioz",
-      categories: ["applied ai", "full-stack"],
-      src: "/coming_soon.jpg",
-      lightModeSrc: "/coming_soon.jpg",
-      video: "",
-      description:
-        "interview preparation platform where people can come and submit their resume and github id and a voice agent will take their mock interview and give them a score",
-      tech: ["python", "postgres", "react"],
-      github: "https://github.com/anuzx/interview_agent",
-      live: "",
-      backgroundImage: "/image copy 2.png",
-      status: "building",
-    },
-    {
-      title: "beru",
-      categories: ["applied ai", "full-stack"],
-      src: "/coming_soon.jpg",
-      lightModeSrc: "/coming_soon.jpg",
-      video: "",
-      description: "autonomous cloud coding agent",
-      tech: ["ts", "redis", "openai", "react", "drizzle"],
-      github: "https://github.com/anuzx/beru",
-      live: "",
-      backgroundImage: "/image copy 3.png",
-      status: "building",
-    },
-    {
-      title: "doodle",
-      categories: ["full-stack"],
-      src: "/project-image/doodle.jpg",
-      lightModeSrc: "/project-image/doodle.jpg",
-      video: "",
-      description:
-        "Real-time multiplayer drawing & guessing game (Skribbl.io clone) built with raw WebSockets",
-      tech: ["ts", "websocket", "react", "tailwind"],
-      github: "https://github.com/anuzx/doodle",
-      live: "",
-      backgroundImage: "/image copy 2.png",
-      status: "building",
-    },
-    {
-      title: "Streamix",
-      categories: ["full-stack"],
-      src: "/project-image/streamix.jpg",
-      lightModeSrc: "/project-image/streamix.jpg",
-      video: "",
-      description: "video uploading platform with transcoding and hls pipeline",
-      tech: ["react", "ts", "mongodb", "redis", "cloudinary", "tailwind"],
-      github: "https://github.com/anuzx/Streamix",
-      live: "",
-      backgroundImage: "/image copy.png",
-      status: "building",
-    },
+  // Pull live star counts from the GitHub API for every project repo.
+  useEffect(() => {
+    let active = true;
 
-    {
-      title: "Chess",
-      categories: ["full-stack"],
-      src: "/project-image/chess.jpg",
-      lightModeSrc: "/project-image/chess.jpg",
-      video: "",
-      description:
-        "multiplayer realtime chess with chat and video calling feature",
-      tech: ["next", "ts", "tailwind", "prisma", "redis"],
-      github: "https://github.com/anuzx/chess",
-      live: "",
-      backgroundImage: "/image copy 3.png",
-      status: "building",
-    },
-    {
-      title: "load balancer",
-      categories: ["systems"],
-      src: "/project-image/loadbalancer.png",
-      lightModeSrc: "/project-image/loadbalancer.png",
-      video: "https://x.com/0xzdev/status/2102756997703840221",
-      description: "L7 Load Balancer in go using round robin algortihm",
-      tech: ["go"],
-      github: "https://github.com/anuzx/load_balancer",
-      live: "https://x.com/0xzdev/status/2102756997703840221",
-      backgroundImage: "/image copy 2.png",
-    },
-    {
-      title: "tcp echo server",
-      categories: ["systems"],
-      src: "/project-image/tcp.png",
-      lightModeSrc: "/project-image/tcp.png",
-      video: "https://x.com/0xzdev/status/2109741180162576530",
-      description: "server that sends back exactly what the client sends to it",
-      tech: ["rust"],
-      github: "https://github.com/anuzx/tcp_echo_server",
-      live: "https://x.com/0xzdev/status/2109741180162576530",
-      backgroundImage: "/image copy 2.png",
-    },
-    {
-      title: "ai-flappy bird",
-      categories: ["ml"],
-      src: "/project-image/bird.jpg",
-      lightModeSrc: "/project-image/bird.jpg",
-      video: "",
-      description:
-        "population of neural networks learns to play Flappy Bird through a genetic algorithm",
-      tech: ["ts"],
-      github: "https://github.com/anuzx/AI_flappy_bird",
-      live: "https://nnflappybird.netlify.app/",
-      backgroundImage: "/image copy.png",
-    },
-    {
-      title: "RL snake game",
-      categories: ["ml"],
-      src: "/project-image/snake.png",
-      lightModeSrc: "/project-image/snake.png",
-      video: "",
-      description:
-        "A snake that teaches itself to play Snake Game, trained live in the browser with a Deep Q-Network (DQN)",
-      tech: ["ts"],
-      github: "https://github.com/anuzx/RL_snake_game",
-      live: "https://rl-snakegame.netlify.app/",
-      backgroundImage: "/image copy.png",
-    },
-    {
-      title: "cex",
-      categories: ["full-stack"],
-      src: "/coming_soon.jpg",
-      lightModeSrc: "/coming_soon.jpg",
-      video: "",
-      description: "centralized spot exchange",
-      tech: ["ts", "prisma", "postgres", "redis", "websocket", "react"],
-      github: "https://github.com/anuzx/cex",
-      live: "",
-      backgroundImage: "/image copy 3.png",
-      status: "building",
-    },
+    fetchStarsForRepos(projects.map((project) => project.github)).then(
+      (counts) => {
+        if (active) setStars(counts);
+      },
+    );
 
-    {
-      title: "SyncBoard",
-      categories: ["full-stack"],
-      src: "/coming_soon.jpg",
-      lightModeSrc: "/coming_soon.jpg",
-      video: "",
-      description: "collaborative doodling tool",
-      tech: ["next", "ts", "tailwind", "drizzle", "websocket"],
-      github: "https://github.com/anuzx/SyncBoard",
-      live: "",
-      status: "building",
-    },
-    {
-      title: "Pulse Guard",
-      categories: ["full-stack"],
-      src: "/project-image/pulse.jpeg",
-      lightModeSrc: "/project-image/pulse.jpeg",
-      video: "",
-      description:
-        "Real-time log monitoring and intelligent threat detection for modern applications.",
-      tech: ["python", "fastapi", "svelte", "kafka"],
-      github: "https://github.com/anuzx/Pulse_Guard",
-      live: "",
-      backgroundImage: "/image copy 2.png",
-    },
-  ];
+    return () => {
+      active = false;
+    };
+  }, []);
 
   // NEW
   const filtered = projects.filter(
     (p) => filter === "all" || p.categories.includes(filter),
   );
 
+  const countFor = (f: Filter) =>
+    f === "all"
+      ? projects.length
+      : projects.filter((p) => p.categories.includes(f)).length;
+
   if (variant === "list") {
-    return <ProjectListSection items={projects.slice(0, 5)} />;
+    return <ProjectListSection items={projects.slice(0, 5)} stars={stars} />;
   }
 
   return (
@@ -853,25 +980,38 @@ const Projects = ({
       {/* NEW: FILTERS (only on /projects) */}
       {showAll && (
         <div
-          className="mt-6 flex flex-wrap gap-x-5 gap-y-1 font-mono text-sm"
+          className="mt-6 flex flex-wrap gap-2"
           role="group"
           aria-label="Filter projects"
         >
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              aria-pressed={filter === f}
-              className={`underline-offset-4 transition-colors ${
-                filter === f
-                  ? "text-neutral-900 underline dark:text-neutral-50"
-                  : "text-neutral-400 hover:text-neutral-900 dark:text-neutral-500 dark:hover:text-neutral-100"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
+          {FILTERS.map((f) => {
+            const active = filter === f;
+
+            return (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                aria-pressed={active}
+                className={`font-custom2 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition-colors ${
+                  active
+                    ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-100 dark:bg-neutral-100 dark:text-neutral-900"
+                    : "border-neutral-200 text-neutral-500 hover:border-neutral-300 hover:text-neutral-900 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-700 dark:hover:text-neutral-100"
+                }`}
+              >
+                {f}
+                <span
+                  className={`tabular-nums ${
+                    active
+                      ? "text-white/60 dark:text-neutral-900/60"
+                      : "text-neutral-400 dark:text-neutral-500"
+                  }`}
+                >
+                  {countFor(f)}
+                </span>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -889,7 +1029,11 @@ const Projects = ({
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.1 }}
             >
-              <ProjectCard project={project} setActiveVideo={setActiveVideo} />
+              <ProjectCard
+                project={project}
+                setActiveVideo={setActiveVideo}
+                starCount={stars[project.github]}
+              />
             </motion.div>
           ),
         )}
@@ -919,10 +1063,12 @@ const Projects = ({
                 <X size={20} className="text-neutral-200" />
               </button>
 
-              {activeVideo.includes("youtube") ? (
+              {isYouTubeUrl(activeVideo) ? (
                 <iframe
-                  src={activeVideo}
+                  src={getYouTubeEmbedUrl(activeVideo)}
+                  title="Project video"
                   className="aspect-video w-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                   allowFullScreen
                 ></iframe>
               ) : (

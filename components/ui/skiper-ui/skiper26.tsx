@@ -458,7 +458,7 @@ export const useThemeToggle = ({
   blur?: boolean;
   gifUrl?: string;
 } = {}) => {
-  const { theme, setTheme, resolvedTheme } = useTheme();
+  const { setTheme, resolvedTheme } = useTheme();
 
   const [isDark, setIsDark] = useState(false);
 
@@ -469,13 +469,10 @@ export const useThemeToggle = ({
 
   const styleId = "theme-transition-styles";
 
-  const updateStyles = useCallback((css: string, name: string) => {
+  const updateStyles = useCallback((css: string) => {
     if (typeof window === "undefined") return;
 
     let styleElement = document.getElementById(styleId) as HTMLStyleElement;
-
-    console.log("style ELement", styleElement);
-    console.log("name", name);
 
     if (!styleElement) {
       styleElement = document.createElement("style");
@@ -484,21 +481,24 @@ export const useThemeToggle = ({
     }
 
     styleElement.textContent = css;
-
-    console.log("content updated");
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setIsDark(!isDark);
-
-    const animation = createAnimation(variant, start, blur, gifUrl);
-
-    updateStyles(animation.css, animation.name);
-
     if (typeof window === "undefined") return;
 
+    const animation = createAnimation(variant, start, blur, gifUrl);
+    updateStyles(animation.css);
+
+    // Read the applied class instead of React state so the first tap is
+    // correct even before the theme has hydrated.
+    const next = document.documentElement.classList.contains("dark")
+      ? "light"
+      : "dark";
+
+    setIsDark(next === "dark");
+
     const switchTheme = () => {
-      setTheme(theme === "light" ? "dark" : "light");
+      setTheme(next);
     };
 
     if (!document.startViewTransition) {
@@ -507,24 +507,14 @@ export const useThemeToggle = ({
     }
 
     document.startViewTransition(switchTheme);
-  }, [
-    theme,
-    setTheme,
-    variant,
-    start,
-    blur,
-    gifUrl,
-    updateStyles,
-    isDark,
-    setIsDark,
-  ]);
+  }, [setTheme, variant, start, blur, gifUrl, updateStyles, setIsDark]);
 
   const setCrazyLightTheme = useCallback(() => {
     setIsDark(false);
 
     const animation = createAnimation(variant, start, blur, gifUrl);
 
-    updateStyles(animation.css, animation.name);
+    updateStyles(animation.css);
 
     if (typeof window === "undefined") return;
 
@@ -545,7 +535,7 @@ export const useThemeToggle = ({
 
     const animation = createAnimation(variant, start, blur, gifUrl);
 
-    updateStyles(animation.css, animation.name);
+    updateStyles(animation.css);
 
     if (typeof window === "undefined") return;
 
@@ -585,7 +575,7 @@ export const ThemeToggleButton = ({
   blur?: boolean;
   gifUrl?: string;
 }) => {
-  const { isDark, toggleTheme } = useThemeToggle({
+  const { toggleTheme } = useThemeToggle({
     variant,
     start,
     blur,
@@ -614,12 +604,10 @@ export const ThemeToggleButton = ({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        <motion.g
-          animate={{ rotate: isDark ? 180 : 0, opacity: isDark ? 0 : 1 }}
-          transition={{ ease: "easeInOut", duration: 0.3 }}
-          style={{ position: isDark ? "absolute" : "relative" }}
-        >
-          {/* Sun icon */}
+        {/* Sun icon — shown in light mode, hidden (and rotated away) in dark.
+            Styled with `dark:` classes so the correct icon is painted on the
+            very first frame instead of waiting for JS hydration. */}
+        <g className="origin-center rotate-0 opacity-100 transition duration-300 ease-in-out dark:-rotate-180 dark:opacity-0">
           <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" />
           <path
             d="M12 2V4M12 20V22M4 12H2M22 12H20"
@@ -633,13 +621,9 @@ export const ThemeToggleButton = ({
             strokeWidth="2"
             strokeLinecap="round"
           />
-        </motion.g>
-        <motion.g
-          animate={{ rotate: isDark ? 0 : -180, opacity: isDark ? 1 : 0 }}
-          transition={{ ease: "easeInOut", duration: 0.3 }}
-          style={{ position: isDark ? "relative" : "absolute" }}
-        >
-          {/* Moon icon */}
+        </g>
+        {/* Moon icon — hidden in light mode, shown in dark. */}
+        <g className="origin-center -rotate-180 opacity-0 transition duration-300 ease-in-out dark:rotate-0 dark:opacity-100">
           <path
             d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"
             stroke="currentColor"
@@ -648,7 +632,7 @@ export const ThemeToggleButton = ({
             strokeLinejoin="round"
             fill="none"
           />
-        </motion.g>
+        </g>
       </svg>
     </button>
   );

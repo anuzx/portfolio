@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, cloneElement, useRef, useCallback } from "react";
+import { useEffect, useState, cloneElement, useRef } from "react";
 import { GitHubCalendar } from "react-github-calendar";
+import type { Activity } from "react-github-calendar";
 import { useTheme } from "next-themes";
 import { Tooltip } from "react-tooltip";
 
@@ -27,65 +28,14 @@ const GithubGraph = () => {
     "all" | "merged" | "open" | "closed"
   >("all");
   const [mounted, setMounted] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const [graphWidth, setGraphWidth] = useState(0);
 
   const initialCount = 2;
 
-  // Glass frame is painted around the calendar cells only (not the month
-  // labels or the legend/count below), so its bounds are measured from the
-  // rendered block rectangles.
-  const calendarWrapRef = useRef<HTMLDivElement | null>(null);
   const graphAreaRef = useRef<HTMLDivElement | null>(null);
-  const [cellFrame, setCellFrame] = useState<{
-    top: number;
-    left: number;
-    width: number;
-    height: number;
-  } | null>(null);
-
-  const measureCells = useCallback(() => {
-    const wrap = calendarWrapRef.current;
-    if (!wrap) return;
-    const svg = wrap.querySelector("svg.react-activity-calendar__calendar");
-    if (!svg) {
-      setCellFrame(null);
-      return;
-    }
-    const rects = Array.from(svg.querySelectorAll("rect"));
-    if (rects.length === 0) {
-      setCellFrame(null);
-      return;
-    }
-    const wrapBox = wrap.getBoundingClientRect();
-    let top = Infinity;
-    let bottom = -Infinity;
-    let left = Infinity;
-    let right = -Infinity;
-    for (const r of rects) {
-      const b = r.getBoundingClientRect();
-      top = Math.min(top, b.top);
-      bottom = Math.max(bottom, b.bottom);
-      left = Math.min(left, b.left);
-      right = Math.max(right, b.right);
-    }
-    const pad = window.innerWidth < 768 ? 6 : 8;
-    setCellFrame({
-      top: top - wrapBox.top - pad,
-      left: left - wrapBox.left - pad,
-      width: right - left + pad * 2,
-      height: bottom - top + pad * 2,
-    });
-  }, []);
 
   useEffect(() => {
     setMounted(true);
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Track the available width so the calendar can be sized to fit phones
@@ -100,28 +50,6 @@ const GithubGraph = () => {
     observer.observe(area);
     return () => observer.disconnect();
   }, [mounted]);
-
-  // The graph loads its data async and its size changes (data load, resize,
-  // mobile mode) — re-measure the cells whenever the SVG resizes.
-  useEffect(() => {
-    if (!mounted) return;
-    const wrap = calendarWrapRef.current;
-    if (!wrap) return;
-    const ro = new ResizeObserver(measureCells);
-    const attach = () => {
-      const svg = wrap.querySelector("svg.react-activity-calendar__calendar");
-      if (svg) ro.observe(svg);
-      measureCells();
-    };
-    attach();
-    // The calendar loads async; re-attach when its SVG is added or replaced.
-    const mo = new MutationObserver(attach);
-    mo.observe(wrap, { childList: true, subtree: true });
-    return () => {
-      ro.disconnect();
-      mo.disconnect();
-    };
-  }, [mounted, isMobile, measureCells]);
 
   useEffect(() => {
     const fetchPRs = async () => {
@@ -195,27 +123,34 @@ const GithubGraph = () => {
 
   const isDark = resolvedTheme === "dark";
 
-  // A year is 53 week columns. Size the cells from the measured container
-  // width so the graph always fits — phones, tablets, and desktop alike.
-  // Weekday labels are omitted: they sit outside the SVG and get clipped by
-  // the horizontal scroll container, and the month labels already give
-  // enough context.
-  const blockMargin = graphWidth >= 640 ? 3 : graphWidth >= 480 ? 2 : 1;
+  // One year is 53 week columns. On phones, show roughly the last six months
+  // with larger cells (like the reference portfolio) so the graph stays
+  // readable and still fits the screen without clipping or side-scrolling.
+  // The cell size is derived from the measured width, so tablets and desktop
+  // always fit too.
+  const compact = graphWidth > 0 && graphWidth < 400;
+  const columns = compact ? 26 : 53;
+  const blockMargin = compact ? 2 : graphWidth >= 640 ? 3 : 2;
   const blockSize = graphWidth
     ? Math.max(
         3,
         Math.min(
-          10,
-          Math.floor((graphWidth - 52 * blockMargin) / 53),
+          11,
+          Math.floor(
+            (graphWidth - (columns - 1) * blockMargin) / columns,
+          ),
         ),
       )
     : 3;
-  const calendarFontSize = graphWidth < 380 ? 8 : graphWidth < 640 ? 10 : 12;
-  const showLegend = graphWidth >= 420;
+  const calendarFontSize = graphWidth < 640 ? 11 : 13;
+
+  const cutoffDate = new Date();
+  cutoffDate.setDate(cutoffDate.getDate() - 25 * 7);
+  const cutoff = cutoffDate.toISOString().slice(0, 10);
 
   const calendarTheme = {
-    light: ["#ffffff", "#d4d4d4", "#a3a3a3", "#525252", "#000000"],
-    dark: ["#1f1f1f", "#404040", "#737373", "#bfbfbf", "#ffffff"],
+    light: ["#f2f2f2", "#d4d4d4", "#a3a3a3", "#525252", "#171717"],
+    dark: ["#1f1f1f", "#353535", "#535353", "#737373", "#969696"],
   };
 
   return (
@@ -227,60 +162,55 @@ const GithubGraph = () => {
         Proof of Work
       </h2>
       {/* Graph Component */}
-      <div ref={graphAreaRef} className="flex w-full justify-center">
-        <div ref={calendarWrapRef} className="relative isolate w-fit max-w-full">
-          {cellFrame && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -z-10 rounded-lg border border-neutral-200/60 bg-white/50 dark:border-white/[0.06] dark:bg-white/[0.02]"
+      <div ref={graphAreaRef} className="w-full">
+        {mounted && (
+          <>
+            <GitHubCalendar
+              username="anuzx"
+              colorScheme={isDark ? "dark" : "light"}
+              theme={calendarTheme}
+              blockSize={blockSize}
+              blockMargin={blockMargin}
+              blockRadius={2}
+              fontSize={calendarFontSize}
+              showWeekdayLabels={false}
+              transformData={
+                compact
+                  ? (data: Activity[]) => data.filter((a) => a.date >= cutoff)
+                  : undefined
+              }
+              labels={{
+                totalCount: compact
+                  ? "{{count}} contributions in the last 6 months on GitHub."
+                  : "{{count}} contributions in the last year on GitHub.",
+              }}
               style={{
-                top: cellFrame.top,
-                left: cellFrame.left,
-                width: cellFrame.width,
-                height: cellFrame.height,
+                color: isDark ? "#8f8f8f" : "#737373",
+              }}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              renderBlock={(block: any, activity: any) =>
+                cloneElement(block, {
+                  "data-tooltip-id": "github-tooltip",
+                  "data-tooltip-content": `${activity.count} contributions on ${activity.date}`,
+                })
+              }
+            />
+            <Tooltip
+              id="github-tooltip"
+              style={{
+                backgroundColor: isDark ? "#171717" : "#ffffff",
+                color: isDark ? "#e5e5e5" : "#171717",
+                borderRadius: "8px",
+                padding: "8px 12px",
+                fontSize: "12px",
+                boxShadow:
+                  "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+                border: isDark ? "1px solid #404040" : "1px solid #e5e5e5",
+                opacity: 1,
               }}
             />
-          )}
-          {mounted && (
-            <>
-              <GitHubCalendar
-                username="anuzx"
-                colorScheme={isDark ? "dark" : "light"}
-                theme={calendarTheme}
-                blockSize={blockSize}
-                blockMargin={blockMargin}
-                blockRadius={blockSize <= 6 ? 1 : 2}
-                fontSize={calendarFontSize}
-                showWeekdayLabels={false}
-                showColorLegend={showLegend}
-                style={{
-                  color: isDark ? "#ffffff" : "#000000",
-                }}
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                renderBlock={(block: any, activity: any) =>
-                  cloneElement(block, {
-                    "data-tooltip-id": "github-tooltip",
-                    "data-tooltip-content": `${activity.count} contributions on ${activity.date}`,
-                  })
-                }
-              />
-              <Tooltip
-                id="github-tooltip"
-                style={{
-                  backgroundColor: isDark ? "#171717" : "#ffffff",
-                  color: isDark ? "#e5e5e5" : "#171717",
-                  borderRadius: "8px",
-                  padding: "8px 12px",
-                  fontSize: "12px",
-                  boxShadow:
-                    "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-                  border: isDark ? "1px solid #404040" : "1px solid #e5e5e5",
-                  opacity: 1,
-                }}
-              />
-            </>
-          )}
-        </div>
+          </>
+        )}
       </div>
       <div className="mt-8">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
