@@ -1,49 +1,28 @@
 /**
- * GitHub API helpers.
+ * Server-side GitHub data (profile + star counts).
  *
- * Small, dependency-free wrappers around the public GitHub REST API used to
- * keep things like the profile picture and project star counts in sync with
- * GitHub automatically.
+ * Why server-side?
+ *  - The token stays on the server and is never shipped to the browser.
+ *  - A single GraphQL request fetches the avatar AND every repo's star count,
+ *    and the result is cached (default 1 hour) so GitHub is hit once per cache
+ *    window for ALL visitors instead of once per visitor.
  *
- * Requests are authenticated with `NEXT_PUBLIC_GITHUB_TOKEN` when available
- * (falling back to unauthenticated requests) and cached in-memory for a short
- * while so navigating between pages doesn't burn through the rate limit.
+ * GitHub rate limits
+ *  (https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api)
+ *  - Unauthenticated REST:  60 requests / hour / IP
+ *  - Authenticated REST:    5,000 requests / hour / token
+ *  - GraphQL:               5,000 points / hour / token
+ *  - `https://github.com/<user>.png` (avatar CDN): no API quota at all
  */
 
 export const GITHUB_USERNAME = "anuzx";
 
 const GITHUB_API = "https://api.github.com";
-const CACHE_TTL = 1000 * 60 * 30; // 30 minutes
+/** How long a fetched result is reused before GitHub is asked again. */
+const REVALIDATE_SECONDS = 60 * 60; // 1 hour
 
-interface CacheEntry<T> {
-  value: T;
-  expires: number;
-}
-
-const cache = new Map<string, CacheEntry<unknown>>();
-
-const readCache = <T>(key: string): T | undefined => {
-  const entry = cache.get(key);
-  if (!entry) return undefined;
-  if (entry.expires < Date.now()) {
-    cache.delete(key);
-    return undefined;
-  }
-  return entry.value as T;
-};
-
-const writeCache = <T>(key: string, value: T) => {
-  cache.set(key, { value, expires: Date.now() + CACHE_TTL });
-};
-
-const githubHeaders = (): HeadersInit => {
-  const headers: Record<string, string> = {
-    Accept: "application/vnd.github+json",
-  };
-  const token = process.env.NEXT_PUBLIC_GITHUB_TOKEN;
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
-};
+const token =
+  process.env.GITHUB_TOKEN || process.env.NEXT_PUBLIC_GITHUB_TOKEN;
 
 export interface GithubProfile {
   login: string;
@@ -53,103 +32,182 @@ export interface GithubProfile {
   bio: string | null;
 }
 
-/**
- * Fetch a GitHub user's public profile (avatar, name, bio, ...).
- * Returns `null` if the request fails.
- */
-export async function fetchGithubProfile(
-  username: string = GITHUB_USERNAME,
-): Promise<GithubProfile | null> {
-  const key = `user:${username}`;
-  const cached = readCache<GithubProfile | null>(key);
-  if (cached !== undefined) return cached;
-
-  try {
-    const res = await fetch(`${GITHUB_API}/users/${username}`, {
-      headers: githubHeaders(),
-    });
-    if (!res.ok) throw new Error(`GitHub user request failed (${res.status})`);
-
-    const data = await res.json();
-    const profile: GithubProfile = {
-      login: data.login,
-      name: data.name ?? null,
-      avatarUrl: data.avatar_url,
-      htmlUrl: data.html_url,
-      bio: data.bio ?? null,
-    };
-
-    writeCache(key, profile);
-    return profile;
-  } catch (error) {
-    console.error("[github] failed to fetch profile:", error);
-    return null;
-  }
+export interface GithubData {
+  profile: GithubProfile;
+  /** Star counts keyed by lowercase `https://github.com/<owner>/<repo>`. */
+  stars: Record<string, number>;
 }
 
 /**
- * Normalize a repo reference to `owner/name`.
- * Accepts a full URL (`https://github.com/owner/name`) or `owner/name`.
+ * Public avatar CDN. This does not touch the API and therefore never counts
+ * against the rate limit — perfect as a fallback.
  */
-export function normalizeRepo(input: string): string | null {
-  if (!input) return null;
+export const avatarCdnUrl = (username: string = GITHUB_USERNAME, size = 256) =>
+  `https://github.com/${username}.png?size=${size}`;
 
-  try {
-    const url = new URL(input);
-    if (url.hostname.endsWith("github.com")) {
-      const [owner, repo] = url.pathname.split("/").filter(Boolean);
-      if (owner && repo) return `${owner}/${repo.replace(/\.git$/, "")}`;
+/** Key used to look up a repo's stars: lowercase full GitHub URL. */
+export const repoUrlKey = (owner: string, repo: string) =>
+  `https://github.com/${owner}/${repo}`.toLowerCase();
+
+const fallback = (): GithubData => ({
+  profile: {
+    login: GITHUB_USERNAME,
+    name: null,
+    avatarUrl: avatarCdnUrl(),
+    htmlUrl: `https://github.com/${GITHUB_USERNAME}`,
+    bio: null,
+  },
+  stars: {},
+});
+
+const authHeaders = (json = false): HeadersInit => {
+  const headers: Record<string, string> = {
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+  };
+  if (json) headers["Content-Type"] = "application/json";
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+};
+
+const cacheOptions = { next: { revalidate: REVALIDATE_SECONDS, tags: ["github"] } };
+
+const PROFILE_QUERY = /* GraphQL */ `
+  query ($login: String!) {
+    user(login: $login) {
+      login
+      name
+      avatarUrl(size: 256)
+      bio
+      url
+      repositories(
+        first: 100
+        ownerAffiliations: OWNER
+        privacy: PUBLIC
+        isFork: false
+      ) {
+        nodes {
+          name
+          stargazerCount
+        }
+      }
     }
-  } catch {
-    // Not a URL, fall through to the `owner/name` check below.
   }
+`;
 
-  const match = input.match(/^([\w.-]+)\/([\w.-]+)$/);
-  if (match) return `${match[1]}/${match[2].replace(/\.git$/, "")}`;
-
-  return null;
+interface GraphqlRepository {
+  name: string;
+  stargazerCount: number;
 }
 
-/** Fetch the number of stargazers for a single repository. */
-export async function fetchRepoStars(repo: string): Promise<number> {
-  const normalized = normalizeRepo(repo);
-  if (!normalized) return 0;
+interface GraphqlUser {
+  login: string;
+  name: string | null;
+  avatarUrl: string;
+  bio: string | null;
+  url: string;
+  repositories: { nodes: GraphqlRepository[] };
+}
 
-  const key = `stars:${normalized}`;
-  const cached = readCache<number>(key);
-  if (cached !== undefined) return cached;
+async function fetchViaGraphql(): Promise<GithubData | null> {
+  const res = await fetch(`${GITHUB_API}/graphql`, {
+    method: "POST",
+    headers: authHeaders(true),
+    body: JSON.stringify({
+      query: PROFILE_QUERY,
+      variables: { login: GITHUB_USERNAME },
+    }),
+    ...cacheOptions,
+  });
 
-  try {
-    const res = await fetch(`${GITHUB_API}/repos/${normalized}`, {
-      headers: githubHeaders(),
-    });
-    if (!res.ok) throw new Error(`GitHub repo request failed (${res.status})`);
+  if (!res.ok) throw new Error(`GitHub GraphQL request failed (${res.status})`);
 
-    const data = await res.json();
-    const count =
-      typeof data.stargazers_count === "number" ? data.stargazers_count : 0;
-
-    writeCache(key, count);
-    return count;
-  } catch (error) {
-    console.error(`[github] failed to fetch stars for ${normalized}:`, error);
-    return 0;
+  const json = await res.json();
+  if (json.errors?.length) {
+    throw new Error(`GitHub GraphQL error: ${JSON.stringify(json.errors)}`);
   }
+
+  const user: GraphqlUser | undefined = json.data?.user;
+  if (!user) return null;
+
+  const stars: Record<string, number> = {};
+  for (const repo of user.repositories.nodes) {
+    stars[repoUrlKey(user.login, repo.name)] = repo.stargazerCount;
+  }
+
+  return {
+    profile: {
+      login: user.login,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+      htmlUrl: user.url,
+      bio: user.bio,
+    },
+    stars,
+  };
+}
+
+/** Fallback used when there is no token (or GraphQL is unavailable). */
+async function fetchViaRest(): Promise<GithubData> {
+  const [userRes, reposRes] = await Promise.all([
+    fetch(`${GITHUB_API}/users/${GITHUB_USERNAME}`, {
+      headers: authHeaders(),
+      ...cacheOptions,
+    }),
+    fetch(
+      `${GITHUB_API}/users/${GITHUB_USERNAME}/repos?per_page=100&type=owner`,
+      { headers: authHeaders(), ...cacheOptions },
+    ),
+  ]);
+
+  if (!userRes.ok || !reposRes.ok) {
+    throw new Error(
+      `GitHub REST request failed (${userRes.status}/${reposRes.status})`,
+    );
+  }
+
+  const user = await userRes.json();
+  const repos: { name: string; stargazers_count: number }[] =
+    await reposRes.json();
+
+  const stars: Record<string, number> = {};
+  for (const repo of repos) {
+    stars[repoUrlKey(user.login, repo.name)] = repo.stargazers_count;
+  }
+
+  return {
+    profile: {
+      login: user.login,
+      name: user.name,
+      avatarUrl: user.avatar_url,
+      htmlUrl: user.html_url,
+      bio: user.bio,
+    },
+    stars,
+  };
 }
 
 /**
- * Fetch stargazer counts for many repositories at once.
- * The returned map is keyed by the original (pre-normalization) inputs so it
- * can be looked up directly with `project.github`.
+ * Fetch the profile and every repo's star count. Cached, so callers can use
+ * this from any Server Component without worrying about the rate limit.
  */
-export async function fetchStarsForRepos(
-  repos: string[],
-): Promise<Record<string, number>> {
-  const unique = Array.from(new Set(repos.filter(Boolean)));
+export async function getGithubData(): Promise<GithubData> {
+  if (token) {
+    try {
+      const data = await fetchViaGraphql();
+      if (data) return data;
+    } catch (error) {
+      console.error(
+        "[github] GraphQL fetch failed, falling back to REST:",
+        error,
+      );
+    }
+  }
 
-  const entries = await Promise.all(
-    unique.map(async (repo) => [repo, await fetchRepoStars(repo)] as const),
-  );
-
-  return Object.fromEntries(entries);
+  try {
+    return await fetchViaRest();
+  } catch (error) {
+    console.error("[github] REST fetch failed, using fallback:", error);
+    return fallback();
+  }
 }

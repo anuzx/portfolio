@@ -10,7 +10,6 @@ import {
   FloatingPreview,
   useFloatingPreview,
 } from "@/components/hover-preview";
-import { fetchStarsForRepos } from "@/lib/github";
 import { Globe, Github, Star, X, Network, Search } from "lucide-react";
 import {
   SiNextdotjs,
@@ -645,7 +644,7 @@ const ProjectListSection = ({
             idx={idx}
             active={activeIdx === idx}
             onActivate={(e) => onRowEnter(idx, e)}
-            starCount={stars[project.github]}
+            starCount={stars[project.github.toLowerCase()]}
           />
         ))}
       </div>
@@ -930,13 +929,15 @@ const projects: Project[] = [
 const Projects = ({
   showAll = false,
   variant = "cards",
+  stars = {},
 }: {
   showAll?: boolean;
   variant?: "cards" | "list";
+  /** Star counts keyed by lowercase GitHub URL (see `lib/github.ts`). */
+  stars?: Record<string, number>;
 }) => {
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [filter, setFilter] = useState<Filter>("all"); // NEW
-  const [stars, setStars] = useState<Record<string, number>>({});
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -944,21 +945,6 @@ const Projects = ({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, []);
-
-  // Pull live star counts from the GitHub API for every project repo.
-  useEffect(() => {
-    let active = true;
-
-    fetchStarsForRepos(projects.map((project) => project.github)).then(
-      (counts) => {
-        if (active) setStars(counts);
-      },
-    );
-
-    return () => {
-      active = false;
-    };
   }, []);
 
   // NEW
@@ -1032,7 +1018,7 @@ const Projects = ({
               <ProjectCard
                 project={project}
                 setActiveVideo={setActiveVideo}
-                starCount={stars[project.github]}
+                starCount={stars[project.github.toLowerCase()]}
               />
             </motion.div>
           ),

@@ -1,9 +1,10 @@
-"use client";
-
 import Container from "@/components/containers";
 import Projects from "@/components/projects";
+import { getGithubData } from "@/lib/github";
 
-export default function Home() {
+export default async function ProjectsPage() {
+  const { stars } = await getGithubData();
+
   return (
     <Container className="mx-auto min-h-screen px-8 pt-24 md:p-20 md:pb-10">
       <h1 className="font-custom text-3xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
@@ -18,7 +19,7 @@ export default function Home() {
       <br />
       <div className="border-t border-solid border-(--pattern-fg) opacity-100 dark:opacity-15"></div>
 
-      <Projects showAll={true}></Projects>
+      <Projects showAll={true} stars={stars}></Projects>
     </Container>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, cloneElement, useRef } from "react";
 import { GitHubCalendar } from "react-github-calendar";
-import type { Activity } from "react-github-calendar";
 import { useTheme } from "next-themes";
 import { Tooltip } from "react-tooltip";
 
@@ -123,35 +122,37 @@ const GithubGraph = () => {
 
   const isDark = resolvedTheme === "dark";
 
-  // One year is 53 week columns. On phones, show roughly the last six months
-  // with larger cells (like the reference portfolio) so the graph stays
-  // readable and still fits the screen without clipping or side-scrolling.
-  // The cell size is derived from the measured width, so tablets and desktop
-  // always fit too.
-  const compact = graphWidth > 0 && graphWidth < 400;
-  const columns = compact ? 26 : 53;
-  const blockMargin = compact ? 2 : graphWidth >= 640 ? 3 : 2;
-  const blockSize = graphWidth
-    ? Math.max(
-        3,
-        Math.min(
-          11,
-          Math.floor(
-            (graphWidth - (columns - 1) * blockMargin) / columns,
-          ),
-        ),
-      )
-    : 3;
+  // Phones keep a comfortable, readable block size and scroll horizontally so
+  // the entire year is reachable. Larger screens size the calendar to fit.
+  const isPhone = graphWidth > 0 && graphWidth < 640;
+  const blockMargin = isPhone ? 2 : 3;
+  const fittedBlockSize = graphWidth
+    ? Math.floor((graphWidth - 52 * blockMargin) / 53)
+    : 12;
+  const blockSize = isPhone
+    ? 12
+    : Math.max(6, Math.min(14, fittedBlockSize));
   const calendarFontSize = graphWidth < 640 ? 11 : 13;
 
-  const cutoffDate = new Date();
-  cutoffDate.setDate(cutoffDate.getDate() - 25 * 7);
-  const cutoff = cutoffDate.toISOString().slice(0, 10);
-
+  // Higher-contrast ramp so every level clearly stands out from the page
+  // background (index 0 = empty day).
   const calendarTheme = {
-    light: ["#f2f2f2", "#d4d4d4", "#a3a3a3", "#525252", "#171717"],
-    dark: ["#1f1f1f", "#353535", "#535353", "#737373", "#969696"],
+    light: ["#e6e6e6", "#b8b8b8", "#858585", "#4f4f4f", "#171717"],
+    dark: ["#2b2b2b", "#4d4d4d", "#7a7a7a", "#ababab", "#ededed"],
   };
+
+  // On phones, start at the most recent contributions instead of a year ago.
+  useEffect(() => {
+    if (!mounted || !isPhone) return;
+    const scroller = graphAreaRef.current?.querySelector<HTMLElement>(
+      ".react-activity-calendar__scroll-container",
+    );
+    if (!scroller) return;
+    const frame = requestAnimationFrame(() => {
+      scroller.scrollLeft = scroller.scrollWidth;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [mounted, isPhone, blockSize]);
 
   return (
     <section aria-labelledby="proof-of-work-heading">
@@ -174,15 +175,9 @@ const GithubGraph = () => {
               blockRadius={2}
               fontSize={calendarFontSize}
               showWeekdayLabels={false}
-              transformData={
-                compact
-                  ? (data: Activity[]) => data.filter((a) => a.date >= cutoff)
-                  : undefined
-              }
               labels={{
-                totalCount: compact
-                  ? "{{count}} contributions in the last 6 months on GitHub."
-                  : "{{count}} contributions in the last year on GitHub.",
+                totalCount:
+                  "{{count}} contributions in the last year on GitHub.",
               }}
               style={{
                 color: isDark ? "#8f8f8f" : "#737373",

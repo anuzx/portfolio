@@ -106,8 +106,35 @@
   transform: translateY(3px);
 }
 
+/* The calendar scrolls horizontally on phones so the whole year of
+   contributions is reachable with a swipe. */
 .react-activity-calendar__scroll-container {
   padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: #d4d4d4 transparent;
+}
+
+.dark .react-activity-calendar__scroll-container {
+  scrollbar-color: #404040 transparent;
+}
+
+.react-activity-calendar__scroll-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.react-activity-calendar__scroll-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.react-activity-calendar__scroll-container::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: #d4d4d4;
+}
+
+.dark .react-activity-calendar__scroll-container::-webkit-scrollbar-thumb {
+  background: #404040;
 }
 
 .react-activity-calendar__footer {

@@ -1,5 +1,3 @@
-"use client";
-
 import Container from "@/components/containers";
 import GithubAvatar from "@/components/github-avatar";
 import Projects from "@/components/projects";
@@ -8,6 +6,7 @@ import Timeline from "@/components/timeline";
 import GithubGraph from "@/components/githubgraph";
 import Writings from "@/components/writings";
 import Skills from "@/components/skills";
+import { getGithubData } from "@/lib/github";
 
 const socials = [
   { name: "GitHub", href: "https://github.com/anuzx" },
@@ -22,12 +21,17 @@ const socials = [
   },
 ];
 
-export default function Home() {
+export default async function Home() {
+  const { profile, stars } = await getGithubData();
+
   return (
     <div className="relative flex min-h-screen flex-col items-center font-sans">
       <Container className="mx-auto min-h-screen px-8 pt-24 pb-0 md:p-20 md:pb-0">
         <div className="flex items-center gap-4">
-          <GithubAvatar />
+          <GithubAvatar
+            src={profile.avatarUrl}
+            alt={profile.name ?? profile.login}
+          />
           <div>
             <h1 className="font-custom text-3xl font-bold tracking-tight text-neutral-900 sm:text-4xl dark:text-neutral-50">
               Anuj Parasar
@@ -68,7 +72,7 @@ export default function Home() {
         </div>
 
         <div className="mt-14 flex flex-col gap-14">
-          <Projects variant="list" />
+          <Projects variant="list" stars={stars} />
           <Timeline />
           <GithubGraph />
           <Writings />
